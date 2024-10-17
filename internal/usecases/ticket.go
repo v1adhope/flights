@@ -1,0 +1,26 @@
+package usecases
+
+import (
+	"context"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/v1adhope/flights/internal/entities"
+)
+
+func (u *Usecases) Create(ctx context.Context, ticket entities.Ticket) (string, error) {
+	id, err := uuid.NewV6()
+	if err != nil {
+		return "", err
+	}
+
+	ticket.Id = id.String()
+
+	ticket.CreatedAt = time.Now()
+
+	if err := u.repos.Create(ctx, ticket); err != nil {
+		return "", err
+	}
+
+	return ticket.Id, nil
+}

@@ -1,0 +1,46 @@
+version: '3'
+
+env:
+  # See migration scripts
+  APP_NETWORK: flights_default
+  POSTGRES_PASSWORD: secret
+  POSTGRES_USER: rat
+  POSTGRES_DB: flights
+  POSTGRES_MIGRATE_NUMBER: 1
+
+
+tasks:
+  docs-gen:
+    cmds:
+      - swag init -g internal/controllers/http/v1/router.go
+
+  build:
+    cmds:
+      - mkdir -p bin
+      - go mod tidy
+      - go mod verify
+      - task: docs-gen
+      - CGO_ENABLED=0 GOOS=linux go build -o ./bin/service_start.sh -v ./cmd/main.go
+      - chmod +x ./bin/service_start.sh
+
+
+  compose:
+    cmds:
+      - task: build
+      - docker compose up -d --build
+
+  compose-down:
+    cmds:
+      - docker compose down
+
+  migrate:
+    cmds:
+      - ./scripts/tasks/migrate_up.sh
+
+  migrate-down:
+    cmds:
+      - ./scripts/tasks/migrate_down.sh
+
+  migrate-force:
+    cmds:
+      - ./scripts/tasks/migrate_force.sh

@@ -1,0 +1,27 @@
+services:
+  service:
+    build: .
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres:
+        restart: true
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16.4
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: secret
+      POSTGRES_USER: rat
+      POSTGRES_DB: flights
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rat -d flights"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
