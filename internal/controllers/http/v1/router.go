@@ -18,7 +18,6 @@ type Router struct {
 func Register(r *Router) {
 	docs.SwaggerInfo.BasePath = "/v1"
 	docs.SwaggerInfo.Title = "Flights API"
-	docs.SwaggerInfo.ReadDoc()
 
 	rg := r.Handler.Group("/v1")
 	rg.Use(errorsHandler(r.Log))
