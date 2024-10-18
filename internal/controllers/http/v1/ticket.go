@@ -34,11 +34,11 @@ type ticketCreateReq struct {
 // @accept json
 // @param ticket body ticketCreateReq true "Ticket request entity"
 // @response 201
-// @header 201 {string} location "Return /v1/tickets/:id resource"
+// @header 201 {string} location "Return /v1/tickets/{id} resource"
 // @response 204
 // @response 422
 // @response 500
-// @router /tickets/ [post]
+// @router /tickets/ [POST]
 func (g *ticketGroup) create(c *gin.Context) {
 	req := ticketCreateReq{}
 
@@ -47,13 +47,15 @@ func (g *ticketGroup) create(c *gin.Context) {
 		return
 	}
 
-	id, err := g.ticketU.CreateTicket(c.Request.Context(), entities.Ticket{
-		FlyFrom:  req.FlyFrom,
-		FlyTo:    req.FlyTo,
-		Provider: req.Provider,
-		FlyAt:    req.FlyAt,
-		ArriveAt: req.ArriveAt,
-	})
+	id, err := g.ticketU.CreateTicket(
+		c.Request.Context(),
+		entities.Ticket{
+			FlyFrom:  req.FlyFrom,
+			FlyTo:    req.FlyTo,
+			Provider: req.Provider,
+			FlyAt:    req.FlyAt,
+			ArriveAt: req.ArriveAt,
+		})
 	if err != nil {
 		setAnyError(c, err)
 		return
@@ -87,14 +89,16 @@ func (g *ticketGroup) replace(c *gin.Context) {
 		return
 	}
 
-	err := g.ticketU.ReplaceTicket(c.Request.Context(), entities.Ticket{
-		Id:       params.Id,
-		FlyFrom:  req.FlyFrom,
-		FlyTo:    req.FlyTo,
-		Provider: req.Provider,
-		FlyAt:    req.FlyAt,
-		ArriveAt: req.ArriveAt,
-	})
+	err := g.ticketU.ReplaceTicket(
+		c.Request.Context(),
+		entities.Ticket{
+			Id:       params.Id,
+			FlyFrom:  req.FlyFrom,
+			FlyTo:    req.FlyTo,
+			Provider: req.Provider,
+			FlyAt:    req.FlyAt,
+			ArriveAt: req.ArriveAt,
+		})
 	if err != nil {
 		setAnyError(c, err)
 		return

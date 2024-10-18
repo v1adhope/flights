@@ -1,5 +1,5 @@
 create table if not exists tickets (
-  ticket_id uuid not null,
+  ticket_id uuid,
   provider varchar(255) not null,
   fly_from varchar(255) not null,
   fly_to varchar(255) not null,

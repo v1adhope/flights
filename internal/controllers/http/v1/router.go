@@ -31,6 +31,7 @@ func Register(r *Router) {
 		rg.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 		registerTicketGroup(&ticketGroup{rg, r.Usecases})
+		registgerPassengerGroup(&passengerGroup{rg, r.Usecases})
 	}
 }
 

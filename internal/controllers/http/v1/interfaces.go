@@ -13,6 +13,12 @@ type TicketUsecaser interface {
 	GetAllTickets(ctx context.Context) ([]entities.Ticket, error)
 }
 
+type PassengerUsecaser interface {
+	CreatePassenger(ctx context.Context, passenger entities.Passenger) error
+	ReplacePassenger(ctx context.Context, passenger entities.Passenger) error
+	DeletePassenger(ctx context.Context, id string) error
+}
+
 type Logger interface {
 	Debug(err error, format string, msg ...any)
 	Error(err error, format string, msg ...any)

@@ -31,11 +31,11 @@ func (r *Repository) CreateTicket(ctx context.Context, ticket entities.Ticket) e
 		).
 		ToSql()
 	if err != nil {
-		return fmt.Errorf("repository: ticket: Replace: Insert: %w", err)
+		return fmt.Errorf("repository: ticket: CreateTicket: Insert: %w", err)
 	}
 
 	if _, err := r.Pool.Exec(ctx, sql, args...); err != nil {
-		return fmt.Errorf("repository: ticket: Replace: Exec: %w", err)
+		return fmt.Errorf("repository: ticket: CreateTicket: Exec: %w", err)
 	}
 
 	return nil
@@ -55,16 +55,16 @@ func (r *Repository) ReplaceTicket(ctx context.Context, ticket entities.Ticket) 
 		}).
 		ToSql()
 	if err != nil {
-		return fmt.Errorf("repository: ticket: Replace: Update: %w", err)
+		return fmt.Errorf("repository: ticket: ReplaceTicket: Update: %w", err)
 	}
 
 	tag, err := r.Pool.Exec(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("repository: ticket: Replace: Exec: %w", err)
+		return fmt.Errorf("repository: ticket: ReplaceTicket: Exec: %w", err)
 	}
 
 	if tag.RowsAffected() == 0 {
-		return fmt.Errorf("repository: ticket: Replace: RowsAffected: %w", entities.ErrorNothingToChange)
+		return fmt.Errorf("repository: ticket: ReplaceTicket: RowsAffected: %w", entities.ErrorNothingToChange)
 	}
 
 	return nil
@@ -77,16 +77,16 @@ func (r *Repository) DeleteTicket(ctx context.Context, id string) error {
 		}).
 		ToSql()
 	if err != nil {
-		return fmt.Errorf("repository: ticket: Delete: Delete: %w", err)
+		return fmt.Errorf("repository: ticket: DeleteTicket: Delete: %w", err)
 	}
 
 	tag, err := r.Pool.Exec(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("repository: ticket: Delete: Exec: %w", err)
+		return fmt.Errorf("repository: ticket: DeleteTicket: Exec: %w", err)
 	}
 
 	if tag.RowsAffected() == 0 {
-		return fmt.Errorf("repository: ticket: Delete: RowsAffected: %w", entities.ErrorNothingToDelete)
+		return fmt.Errorf("repository: ticket: DeleteTicket: RowsAffected: %w", entities.ErrorNothingToDelete)
 	}
 
 	return nil
@@ -105,7 +105,7 @@ func (r *Repository) GetAllTickets(ctx context.Context) ([]entities.Ticket, erro
 		From("tickets").
 		ToSql()
 	if err != nil {
-		return []entities.Ticket{}, fmt.Errorf("repository: ticket: GetAll: Select: %w", err)
+		return []entities.Ticket{}, fmt.Errorf("repository: ticket: GetAllTickets: Select: %w", err)
 	}
 
 	rows, err := r.Pool.Query(ctx, sql, args...)
@@ -126,11 +126,11 @@ func (r *Repository) GetAllTickets(ctx context.Context) ([]entities.Ticket, erro
 		return nil
 	})
 	if err != nil {
-		return []entities.Ticket{}, fmt.Errorf("repository: ticket: GetAll: ForEachRow: %w", err)
+		return []entities.Ticket{}, fmt.Errorf("repository: ticket: GetAllTickets: ForEachRow: %w", err)
 	}
 
 	if len(tickets) == 0 {
-		return []entities.Ticket{}, fmt.Errorf("repository: ticket: GetAll: len: %w", entities.ErrorNothingFound)
+		return []entities.Ticket{}, fmt.Errorf("repository: ticket: GetAllTickets: len: %w", entities.ErrorNothingFound)
 	}
 
 	return tickets, nil

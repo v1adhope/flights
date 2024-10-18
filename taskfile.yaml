@@ -6,7 +6,7 @@ env:
   POSTGRES_PASSWORD: secret
   POSTGRES_USER: rat
   POSTGRES_DB: flights
-  POSTGRES_MIGRATE_NUMBER: 1
+  POSTGRES_MIGRATE_NUMBER: 2
 
 tasks:
   docs-gen:
@@ -46,6 +46,10 @@ tasks:
   migrate-force:
     cmds:
       - ./scripts/tasks/migrate_force.sh
+
+  migrate-create:
+    cmds:
+      - ./scripts/tasks/migrate_create.sh
 
   postgres-attach:
     cmds:

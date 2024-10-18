@@ -11,4 +11,8 @@ type Reposer interface {
 	ReplaceTicket(ctx context.Context, ticket entities.Ticket) error
 	DeleteTicket(ctx context.Context, id string) error
 	GetAllTickets(ctx context.Context) ([]entities.Ticket, error)
+
+	CreatePassenger(ctx context.Context, passenger entities.Passenger) error
+	ReplacePassenger(ctx context.Context, passenger entities.Passenger) error
+	DeletePassenger(ctx context.Context, id string) error
 }

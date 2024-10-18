@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,7 +12,7 @@ import (
 func (u *Usecases) CreateTicket(ctx context.Context, ticket entities.Ticket) (string, error) {
 	id, err := uuid.NewV6()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("usecases: ticket: CreateTicket: NewV6: %w", err)
 	}
 
 	ticket.Id = id.String()

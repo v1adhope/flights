@@ -94,6 +94,8 @@ func TestSuite(t *testing.T) {
 	suite.Run(t, new(Suite))
 }
 
+// INFO: tickets
+
 type ticketCreateReq struct {
 	id       string
 	Provider string `json:"provider"`
@@ -363,6 +365,99 @@ func (s *Suite) Test4DeleteTicket() {
 			s.router.ServeHTTP(w, req)
 
 			assert.Equal(t, tc.code, w.Code, tc.key)
+		}
+	})
+}
+
+// INFO: passangers
+
+type passengerCreateReq struct {
+	id         string
+	FirstName  string `json:"firstName"`
+	LastName   string `json:"lastName"`
+	MiddleName string `json:"middleName"`
+}
+
+func (s *Suite) Test1CreatePassengerPositive() {
+	t := s.T()
+
+	tcs := []struct {
+		key  string
+		body passengerCreateReq
+	}{
+		{
+			key: "1",
+			body: passengerCreateReq{
+				FirstName:  "Riley",
+				LastName:   "Scott",
+				MiddleName: "Reed",
+			},
+		},
+		{
+			key: "2",
+			body: passengerCreateReq{
+				FirstName:  "Thomas",
+				LastName:   "Langlois",
+				MiddleName: "Floyd",
+			},
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			jsonData, err := json.Marshal(tc.body)
+			assert.NoError(t, err, tc.key)
+
+			req, err := http.NewRequest(
+				"POST",
+				"/v1/passengers/",
+				strings.NewReader(string(jsonData)),
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusCreated, w.Code, tc.key)
+		}
+	})
+}
+
+func (s *Suite) Test1CreatePassengerNegative() {
+	t := s.T()
+
+	tcs := []struct {
+		key  string
+		body passengerCreateReq
+	}{
+		{
+			key: "Name overflow",
+			body: passengerCreateReq{
+				FirstName:  strings.Repeat("R", 256),
+				LastName:   "Scott",
+				MiddleName: "Reed",
+			},
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			jsonData, err := json.Marshal(tc.body)
+			assert.NoError(t, err, tc.key)
+
+			req, err := http.NewRequest(
+				"POST",
+				"/v1/passengers/",
+				strings.NewReader(string(jsonData)),
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusUnprocessableEntity, w.Code, tc.key)
 		}
 	})
 }
