@@ -109,22 +109,27 @@ func (r *Repository) GetAllTickets(ctx context.Context) ([]entities.Ticket, erro
 	}
 
 	rows, err := r.Pool.Query(ctx, sql, args...)
+	if err != nil {
+		return []entities.Ticket{}, fmt.Errorf("repository: ticket: GetAllTickets: Query: %w", err)
+	}
 
 	tickets := []entities.Ticket{}
 	ticket := ticketDto{}
 
-	_, err = pgx.ForEachRow(rows, []any{
-		&ticket.Id,
-		&ticket.Provider,
-		&ticket.FlyFrom,
-		&ticket.FlyTo,
-		&ticket.FlyAt,
-		&ticket.ArriveAt,
-		&ticket.CreatedAt,
-	}, func() error {
-		tickets = append(tickets, ticket.toEntity())
-		return nil
-	})
+	_, err = pgx.ForEachRow(
+		rows,
+		[]any{
+			&ticket.Id,
+			&ticket.Provider,
+			&ticket.FlyFrom,
+			&ticket.FlyTo,
+			&ticket.FlyAt,
+			&ticket.ArriveAt,
+			&ticket.CreatedAt,
+		}, func() error {
+			tickets = append(tickets, ticket.toEntity())
+			return nil
+		})
 	if err != nil {
 		return []entities.Ticket{}, fmt.Errorf("repository: ticket: GetAllTickets: ForEachRow: %w", err)
 	}

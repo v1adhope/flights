@@ -38,3 +38,12 @@ func (u *Usecases) DeletePassenger(ctx context.Context, id string) error {
 
 	return nil
 }
+
+func (u *Usecases) GetAllPassengers(ctx context.Context) ([]entities.Passenger, error) {
+	passengers, err := u.repos.GetAllPassengers(ctx)
+	if err != nil {
+		return []entities.Passenger{}, err
+	}
+
+	return passengers, nil
+}

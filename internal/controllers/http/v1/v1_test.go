@@ -73,6 +73,7 @@ func (s *Suite) SetupSuite() {
 
 	v1.SetMode(_handlerMode)
 	router := gin.New()
+	router.Use(gin.Logger(), gin.Recovery())
 	v1.Register(&v1.Router{
 		Handler:  router,
 		Usecases: uc,
@@ -123,6 +124,16 @@ func (s *Suite) Test1CreateTicketPositive() {
 			},
 		},
 		{
+			key: "The same as 1rd",
+			body: ticketCreateReq{
+				Provider: "Emirates",
+				FlyFrom:  "Moscow",
+				FlyTo:    "Hanoi",
+				FlyAt:    "2022-01-02T15:04:05+03:00",
+				ArriveAt: "2022-01-03T15:04:05+07:00",
+			},
+		},
+		{
 			key: "2",
 			body: ticketCreateReq{
 				Provider: "China Airlines",
@@ -140,7 +151,7 @@ func (s *Suite) Test1CreateTicketPositive() {
 			assert.NoError(t, err, tc.key)
 
 			req, err := http.NewRequest(
-				"POST",
+				http.MethodPost,
 				"/v1/tickets/",
 				strings.NewReader(string(jsonData)),
 			)
@@ -200,7 +211,7 @@ func (s *Suite) Test1CreateTicketNegative() {
 			assert.NoError(t, err, tc.key)
 
 			req, err := http.NewRequest(
-				"POST",
+				http.MethodPost,
 				"/v1/tickets/",
 				strings.NewReader(string(jsonData)),
 			)
@@ -216,7 +227,7 @@ func (s *Suite) Test1CreateTicketNegative() {
 }
 
 // TODO: error
-// func (s *Suite) Test2UpdateTicketPositive() {
+// func (s *Suite) Test2ReplaceTicketPositive() {
 // 	t := s.T()
 //
 // 	tcs := []struct {
@@ -257,6 +268,44 @@ func (s *Suite) Test1CreateTicketNegative() {
 // 	})
 // }
 
+func (s *Suite) Test3DeleteTicket() {
+	t := s.T()
+
+	tcs := []struct {
+		key  string
+		id   string
+		code int
+	}{
+		{
+			key:  "Success",
+			id:   s.utils.GetTicketByOffset(s.ctx, 1),
+			code: http.StatusOK,
+		},
+		{
+			key:  "No content",
+			id:   s.utils.GetTicketByOffset(s.ctx, 1),
+			code: http.StatusNoContent,
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			req, err := http.NewRequest(
+				http.MethodDelete,
+				fmt.Sprintf("/v1/tickets/%s", tc.id),
+				nil,
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, tc.code, w.Code, tc.key)
+		}
+	})
+}
+
 type ticket struct {
 	Id        string `json:"id"`
 	Provider  string `json:"provider"`
@@ -267,7 +316,7 @@ type ticket struct {
 	CreatedAt string `json:"createdAt"`
 }
 
-func (s *Suite) Test3GetAllTicketsPositive() {
+func (s *Suite) Test4GetAllTicketsPositive() {
 	t := s.T()
 
 	tcs := []struct {
@@ -300,7 +349,7 @@ func (s *Suite) Test3GetAllTicketsPositive() {
 	t.Run("", func(t *testing.T) {
 		for _, tc := range tcs {
 			req, err := http.NewRequest(
-				"GET",
+				http.MethodGet,
 				"/v1/tickets/",
 				nil,
 			)
@@ -313,7 +362,8 @@ func (s *Suite) Test3GetAllTicketsPositive() {
 			assert.Equal(t, http.StatusOK, w.Code, tc.key)
 
 			tickets := []ticket{}
-			json.NewDecoder(w.Body).Decode(&tickets)
+			err = json.NewDecoder(w.Body).Decode(&tickets)
+			assert.NoError(t, err, tc.key)
 			for i := range tc.expected {
 				flyAtRightFormat, err := time.Parse(time.RFC3339, tickets[i].FlyAt)
 				assert.NoError(t, err, tc.key, i)
@@ -327,44 +377,6 @@ func (s *Suite) Test3GetAllTicketsPositive() {
 				assert.Equal(t, tc.expected[i].FlyAt, flyAtRightFormat.UTC().Format(time.RFC3339), tc.key, i)
 				assert.Equal(t, tc.expected[i].ArriveAt, arriveToRightFormat.UTC().Format(time.RFC3339), tc.key, i)
 			}
-		}
-	})
-}
-
-func (s *Suite) Test4DeleteTicket() {
-	t := s.T()
-
-	tcs := []struct {
-		key  string
-		id   string
-		code int
-	}{
-		{
-			key:  "Success",
-			id:   s.utils.GetTicketByOffset(s.ctx, 0),
-			code: http.StatusOK,
-		},
-		{
-			key:  "No content",
-			id:   s.utils.GetTicketByOffset(s.ctx, 0),
-			code: http.StatusNoContent,
-		},
-	}
-
-	t.Run("", func(t *testing.T) {
-		for _, tc := range tcs {
-			req, err := http.NewRequest(
-				"DELETE",
-				fmt.Sprintf("/v1/tickets/%s", tc.id),
-				nil,
-			)
-			assert.NoError(t, err, tc.key)
-
-			w := httptest.NewRecorder()
-
-			s.router.ServeHTTP(w, req)
-
-			assert.Equal(t, tc.code, w.Code, tc.key)
 		}
 	})
 }
@@ -394,6 +406,15 @@ func (s *Suite) Test1CreatePassengerPositive() {
 			},
 		},
 		{
+			key: "The same as 1rd",
+			body: passengerCreateReq{
+				FirstName:  "Riley",
+				LastName:   "Scott",
+				MiddleName: "Reed",
+			},
+		},
+
+		{
 			key: "2",
 			body: passengerCreateReq{
 				FirstName:  "Thomas",
@@ -409,7 +430,7 @@ func (s *Suite) Test1CreatePassengerPositive() {
 			assert.NoError(t, err, tc.key)
 
 			req, err := http.NewRequest(
-				"POST",
+				http.MethodPost,
 				"/v1/passengers/",
 				strings.NewReader(string(jsonData)),
 			)
@@ -447,7 +468,7 @@ func (s *Suite) Test1CreatePassengerNegative() {
 			assert.NoError(t, err, tc.key)
 
 			req, err := http.NewRequest(
-				"POST",
+				http.MethodPost,
 				"/v1/passengers/",
 				strings.NewReader(string(jsonData)),
 			)
@@ -458,6 +479,139 @@ func (s *Suite) Test1CreatePassengerNegative() {
 			s.router.ServeHTTP(w, req)
 
 			assert.Equal(t, http.StatusUnprocessableEntity, w.Code, tc.key)
+		}
+	})
+}
+
+// TODO: error
+// func (s *Suite) Test2ReplacePassengerPositive() {
+// 	t := s.T()
+//
+// 	tcs := []struct {
+// 		key  string
+// 		body passengerCreateReq
+// 	}{
+// 		{
+// 			key: "1",
+// 			body: passengerCreateReq{
+// 				id:         s.utils.GetPassengerByOffset(s.ctx, 0),
+// 				FirstName:  "",
+// 				LastName:   "",
+// 				MiddleName: "",
+// 			},
+// 		},
+// 	}
+//
+// 	t.Run("", func(t *testing.T) {
+// 		for _, tc := range tcs {
+// 			jsonData, err := json.Marshal(tc.body)
+// 			assert.NoError(t, err, tc.key)
+//
+// 			req, err := http.NewRequest(
+// 				http.MethodPut,
+// 				fmt.Sprintf("/v1/passengers/%s", tc.body.id),
+// 				strings.NewReader(string(jsonData)),
+// 			)
+// 			assert.NoError(t, err, tc.key)
+//
+// 			w := httptest.NewRecorder()
+//
+// 			s.router.ServeHTTP(w, req)
+//
+// 			assert.Equal(t, http.StatusOK, w.Code, tc.key)
+// 		}
+// 	})
+// }
+
+func (s *Suite) Test3DeletePassenger() {
+	t := s.T()
+
+	tcs := []struct {
+		key  string
+		id   string
+		code int
+	}{
+		{
+			key:  "Success",
+			id:   s.utils.GetPassengerByOffset(s.ctx, 1),
+			code: http.StatusOK,
+		},
+		{
+			key:  "No content",
+			id:   s.utils.GetPassengerByOffset(s.ctx, 1),
+			code: http.StatusNoContent,
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			req, err := http.NewRequest(
+				http.MethodDelete,
+				fmt.Sprintf("/v1/passengers/%s", tc.id),
+				nil,
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, tc.code, w.Code, tc.key)
+		}
+	})
+}
+
+type passenger struct {
+	Id         string `json:"id"`
+	FirstName  string `json:"firstName"`
+	LastName   string `json:"lastName"`
+	MiddleName string `json:"middleName"`
+}
+
+func (s *Suite) Test4GetAllPassengers() {
+	t := s.T()
+
+	tcs := []struct {
+		key      string
+		expected []passenger
+	}{
+		{
+			key: "1",
+			expected: []passenger{
+				{
+					Id:         s.utils.GetPassengerByOffset(s.ctx, 0),
+					FirstName:  "Riley",
+					LastName:   "Scott",
+					MiddleName: "Reed",
+				},
+				{
+					Id:         s.utils.GetPassengerByOffset(s.ctx, 1),
+					FirstName:  "Thomas",
+					LastName:   "Langlois",
+					MiddleName: "Floyd",
+				},
+			},
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			req, err := http.NewRequest(
+				http.MethodGet,
+				"/v1/passengers/",
+				nil,
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			passengers := []passenger{}
+			err = json.NewDecoder(w.Body).Decode(&passengers)
+			assert.NoError(t, err, tc.key)
+
+			assert.Equal(t, tc.expected, passengers)
 		}
 	})
 }

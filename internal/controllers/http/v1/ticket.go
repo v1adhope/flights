@@ -69,7 +69,7 @@ func (g *ticketGroup) create(c *gin.Context) {
 // @tags Tickets
 // @accept json
 // @param ticket body ticketCreateReq true "Ticket request entity"
-// @param id path string true "Ticket Id (uuid)"
+// @param id path string true "Ticket id (uuid)"
 // @response 200
 // @response 422
 // @response 500
@@ -92,7 +92,7 @@ func (g *ticketGroup) replace(c *gin.Context) {
 	err := g.ticketU.ReplaceTicket(
 		c.Request.Context(),
 		entities.Ticket{
-			Id:       params.Id,
+			Id:       params.Value,
 			FlyFrom:  req.FlyFrom,
 			FlyTo:    req.FlyTo,
 			Provider: req.Provider,
@@ -108,7 +108,7 @@ func (g *ticketGroup) replace(c *gin.Context) {
 }
 
 // @tags Tickets
-// @param id path string true "Ticket Id (uuid)"
+// @param id path string true "Ticket id (uuid)"
 // @response 200
 // @response 204
 // @response 422
@@ -122,7 +122,7 @@ func (g *ticketGroup) delete(c *gin.Context) {
 		return
 	}
 
-	err := g.ticketU.DeleteTicket(c.Request.Context(), params.Id)
+	err := g.ticketU.DeleteTicket(c.Request.Context(), params.Value)
 	if err != nil {
 		setAnyError(c, err)
 		return

@@ -42,6 +42,7 @@ func errorsHandler(log Logger) gin.HandlerFunc {
 					errors.Is(err, entities.ErrorNothingFound):
 					log.Debug(ginErr, "%s", "http.StatusNoContent")
 					c.AbortWithStatus(http.StatusNoContent)
+					return
 				}
 			}
 

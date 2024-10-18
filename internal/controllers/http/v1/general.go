@@ -7,7 +7,7 @@ import (
 )
 
 type id struct {
-	Id string `uri:"id" binding:"required,uuid"`
+	Value string `uri:"id" binding:"required,uuid"`
 }
 
 func setLocationHeader(c *gin.Context, url, id string) {
