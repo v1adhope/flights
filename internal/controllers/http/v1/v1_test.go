@@ -253,7 +253,7 @@ func (s *Suite) Test1CreateTicketNegative() {
 // 			assert.NoError(t, err, tc.key)
 //
 // 			req, err := http.NewRequest(
-// 				"PUT",
+// 				http.MethodPut,
 // 				fmt.Sprintf("/v1/tickets/%s", tc.body.id),
 // 				strings.NewReader(string(jsonData)),
 // 			)
@@ -483,45 +483,44 @@ func (s *Suite) Test1CreatePassengerNegative() {
 	})
 }
 
-// TODO: error
-// func (s *Suite) Test2ReplacePassengerPositive() {
-// 	t := s.T()
-//
-// 	tcs := []struct {
-// 		key  string
-// 		body passengerCreateReq
-// 	}{
-// 		{
-// 			key: "1",
-// 			body: passengerCreateReq{
-// 				id:         s.utils.GetPassengerByOffset(s.ctx, 0),
-// 				FirstName:  "",
-// 				LastName:   "",
-// 				MiddleName: "",
-// 			},
-// 		},
-// 	}
-//
-// 	t.Run("", func(t *testing.T) {
-// 		for _, tc := range tcs {
-// 			jsonData, err := json.Marshal(tc.body)
-// 			assert.NoError(t, err, tc.key)
-//
-// 			req, err := http.NewRequest(
-// 				http.MethodPut,
-// 				fmt.Sprintf("/v1/passengers/%s", tc.body.id),
-// 				strings.NewReader(string(jsonData)),
-// 			)
-// 			assert.NoError(t, err, tc.key)
-//
-// 			w := httptest.NewRecorder()
-//
-// 			s.router.ServeHTTP(w, req)
-//
-// 			assert.Equal(t, http.StatusOK, w.Code, tc.key)
-// 		}
-// 	})
-// }
+func (s *Suite) Test2ReplacePassengerPositive() {
+	t := s.T()
+
+	tcs := []struct {
+		key  string
+		body passengerCreateReq
+	}{
+		{
+			key: "1",
+			body: passengerCreateReq{
+				id:         s.utils.GetPassengerByOffset(s.ctx, 0),
+				FirstName:  "Randy",
+				LastName:   "Shelby",
+				MiddleName: "McGrath",
+			},
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			jsonData, err := json.Marshal(tc.body)
+			assert.NoError(t, err, tc.key)
+
+			req, err := http.NewRequest(
+				http.MethodPut,
+				fmt.Sprintf("/v1/passengers/%s", tc.body.id),
+				strings.NewReader(string(jsonData)),
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusOK, w.Code, tc.key)
+		}
+	})
+}
 
 func (s *Suite) Test3DeletePassenger() {
 	t := s.T()
@@ -586,9 +585,9 @@ func (s *Suite) Test4GetAllPassengers() {
 				},
 				{
 					Id:         s.utils.GetPassengerByOffset(s.ctx, 1),
-					FirstName:  "Thomas",
-					LastName:   "Langlois",
-					MiddleName: "Floyd",
+					FirstName:  "Randy",
+					LastName:   "Shelby",
+					MiddleName: "McGrath",
 				},
 			},
 		},
@@ -611,7 +610,7 @@ func (s *Suite) Test4GetAllPassengers() {
 			err = json.NewDecoder(w.Body).Decode(&passengers)
 			assert.NoError(t, err, tc.key)
 
-			assert.Equal(t, tc.expected, passengers)
+			assert.Equal(t, tc.expected, passengers, tc.key)
 		}
 	})
 }
