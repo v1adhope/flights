@@ -24,3 +24,11 @@ func (u *Usecases) Create(ctx context.Context, ticket entities.Ticket) (string, 
 
 	return ticket.Id, nil
 }
+
+func (u *Usecases) Replace(ctx context.Context, ticket entities.Ticket) error {
+	if err := u.repos.Replace(ctx, ticket); err != nil {
+		return err
+	}
+
+	return nil
+}

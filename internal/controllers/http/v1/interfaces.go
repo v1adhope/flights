@@ -8,6 +8,7 @@ import (
 
 type TicketUsecaser interface {
 	Create(ctx context.Context, ticket entities.Ticket) (string, error)
+	Replace(ctx context.Context, ticket entities.Ticket) error
 }
 
 type Logger interface {

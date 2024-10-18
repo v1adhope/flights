@@ -28,9 +28,10 @@ const (
 
 type Suite struct {
 	suite.Suite
+	ctx    context.Context
 	pgC    *testhelpers.PostgresContainer
 	router *gin.Engine
-	ctx    context.Context
+	utils  *testhelpers.Utils
 }
 
 func (s *Suite) SetupSuite() {
@@ -77,6 +78,8 @@ func (s *Suite) SetupSuite() {
 	})
 
 	s.router = router
+
+	s.utils = testhelpers.NewUtils(pd)
 }
 
 func (s *Suite) TearDownSuite() {
@@ -90,6 +93,7 @@ func TestSuite(t *testing.T) {
 }
 
 type ticketCreateReq struct {
+	id       string
 	Provider string `json:"provider"`
 	FlyFrom  string `json:"flyFrom"`
 	FlyTo    string `json:"flyTo"`
@@ -205,3 +209,45 @@ func (s *Suite) TestCreateTicketNegative() {
 		}
 	})
 }
+
+// TODO: error
+// func (s *Suite) TestUpdateTicketPositive() {
+// 	t := s.T()
+//
+// 	tcs := []struct {
+// 		key  string
+// 		body ticketCreateReq
+// 	}{
+// 		{
+// 			key: "1",
+// 			body: ticketCreateReq{
+// 				id:       s.utils.GetFirstTicketID(s.ctx),
+// 				Provider: "China Airlines",
+// 				FlyFrom:  "Beijing",
+// 				FlyTo:    "Moscow",
+// 				FlyAt:    "2023-01-02T15:04:05+08:00",
+// 				ArriveAt: "2023-01-03T15:04:05+03:00",
+// 			},
+// 		},
+// 	}
+//
+// 	t.Run("", func(t *testing.T) {
+// 		for _, tc := range tcs {
+// 			jsonData, err := json.Marshal(tc.body)
+// 			assert.NoError(t, err, tc.key)
+//
+// 			req, err := http.NewRequest(
+// 				"PUT",
+// 				fmt.Sprintf("/v1/tickets/%s", tc.body.id),
+// 				strings.NewReader(string(jsonData)),
+// 			)
+// 			assert.NoError(t, err, tc.key)
+//
+// 			w := httptest.NewRecorder()
+//
+// 			s.router.ServeHTTP(w, req)
+//
+// 			assert.Equal(t, http.StatusOK, w.Code, tc.key)
+// 		}
+// 	})
+// }

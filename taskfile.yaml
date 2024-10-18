@@ -46,3 +46,7 @@ tasks:
   migrate-force:
     cmds:
       - ./scripts/tasks/migrate_force.sh
+
+  postgres-attach:
+    cmds:
+      - docker exec -it flights-postgres-1 bash -c "psql -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
