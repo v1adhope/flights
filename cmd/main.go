@@ -30,7 +30,7 @@ func main() {
 
 	repo := repository.New(pd)
 
-	usecases := usecases.New(repo)
+	uc := usecases.New(repo)
 
 	log := logger.New(
 		logger.WithLevel("debug"),
@@ -41,7 +41,7 @@ func main() {
 	router.Use(gin.Logger(), gin.Recovery())
 	v1.Register(&v1.Router{
 		Handler:  router,
-		Usecases: usecases,
+		Usecases: uc,
 		Log:      log,
 	})
 	v1Srv := httpsrv.New(

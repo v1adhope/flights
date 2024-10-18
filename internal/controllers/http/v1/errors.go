@@ -32,12 +32,12 @@ func errorsHandler(log Logger) gin.HandlerFunc {
 			switch errType {
 			case gin.ErrorTypeBind:
 				log.Debug(ginErr, "%s", "StatusUnprocessableEntity")
-				c.Status(http.StatusUnprocessableEntity)
+				abortWithErrorMsg(c, http.StatusUnprocessableEntity, ginErr.Error())
 				return
 			case gin.ErrorTypeAny:
 			}
 
-			log.Error(ginErr, "%s", "StatusTeapot")
+			log.Error(ginErr, "%s", "StatusInternalServerError")
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}

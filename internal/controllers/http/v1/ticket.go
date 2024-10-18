@@ -21,11 +21,11 @@ func registerTicketGroup(group *ticketGroup) {
 }
 
 type tickerCreateReq struct {
-	Provider string    `json:"provider" example:"Emirates" binding:"required"`
-	FlyFrom  string    `json:"flyFrom" example:"Moscow" binding:"required"`
-	FlyTo    string    `json:"flyTo" example:"Hanoi" binding:"required"`
+	Provider string    `json:"provider" example:"Emirates" binding:"required,max=255"`
+	FlyFrom  string    `json:"flyFrom" example:"Moscow" binding:"required,max=255"`
+	FlyTo    string    `json:"flyTo" example:"Hanoi" binding:"required,max=255"`
 	FlyAt    time.Time `json:"flyAt" example:"2022-01-02T15:04:05+03:00" binding:"required"`
-	ArriveAt time.Time `json:"arriveAt" example:"2022-01-03T15:04:05+07:00" binding:"required"`
+	ArriveAt time.Time `json:"arriveAt" example:"2022-01-03T15:04:05+07:00" binding:"required,gtfield=FlyAt"`
 }
 
 // @tags Tickets

@@ -8,7 +8,6 @@ env:
   POSTGRES_DB: flights
   POSTGRES_MIGRATE_NUMBER: 1
 
-
 tasks:
   docs-gen:
     cmds:
@@ -23,6 +22,9 @@ tasks:
       - CGO_ENABLED=0 GOOS=linux go build -o ./bin/service_start.sh -v ./cmd/main.go
       - chmod +x ./bin/service_start.sh
 
+  tests:
+    cmds:
+      - go test --race ./...
 
   compose:
     cmds:
