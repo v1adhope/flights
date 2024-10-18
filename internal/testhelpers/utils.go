@@ -15,9 +15,10 @@ func NewUtils(d *postgresql.Driver) *Utils {
 	return &Utils{d}
 }
 
-func (u *Utils) GetFirstTicketID(ctx context.Context) string {
+func (u *Utils) GetTicketByOffset(ctx context.Context, offset uint64) string {
 	sql, args, err := u.Builder.Select("ticket_id").
 		From("tickets").
+		Offset(offset).
 		Limit(1).
 		ToSql()
 	if err != nil {

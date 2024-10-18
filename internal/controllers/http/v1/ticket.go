@@ -18,6 +18,7 @@ func registerTicketGroup(group *ticketGroup) {
 	{
 		ticketG.POST("/", group.create)
 		ticketG.PUT("/:id", group.replace)
+		ticketG.DELETE("/:id", group.delete)
 	}
 }
 
@@ -33,7 +34,8 @@ type ticketCreateReq struct {
 // @accept json
 // @param ticket body ticketCreateReq true "Ticket request entity"
 // @response 201
-// @header 201 {string} Location "Return /v1/tickets/:id resource"
+// @header 201 {string} location "Return /v1/tickets/:id resource"
+// @response 204
 // @response 422
 // @response 500
 // @router /tickets/ [post]
@@ -93,6 +95,30 @@ func (g *ticketGroup) replace(c *gin.Context) {
 		FlyAt:    req.FlyAt,
 		ArriveAt: req.ArriveAt,
 	})
+	if err != nil {
+		setAnyError(c, err)
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+// @tags Tickets
+// @param id path string true "Ticket Id (uuid)"
+// @response 200
+// @response 204
+// @response 422
+// @response 500
+// @router /tickets/{id} [DELETE]
+func (g *ticketGroup) delete(c *gin.Context) {
+	params := id{}
+
+	if err := c.ShouldBindUri(&params); err != nil {
+		setBindError(c, err)
+		return
+	}
+
+	err := g.ticketU.Delete(c.Request.Context(), params.Id)
 	if err != nil {
 		setAnyError(c, err)
 		return

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/v1adhope/flights/internal/entities"
 )
 
 func setBindError(c *gin.Context, err error) {
@@ -35,6 +36,12 @@ func errorsHandler(log Logger) gin.HandlerFunc {
 				abortWithErrorMsg(c, http.StatusUnprocessableEntity, ginErr.Error())
 				return
 			case gin.ErrorTypeAny:
+				switch {
+				case errors.Is(err, entities.ErrorNothingToChange),
+					errors.Is(err, entities.ErrorNothingToDelete):
+					log.Debug(ginErr, "%s", "http.StatusNoContent")
+					c.AbortWithStatus(http.StatusNoContent)
+				}
 			}
 
 			log.Error(ginErr, "%s", "StatusInternalServerError")

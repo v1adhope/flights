@@ -3,6 +3,7 @@ package v1_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -251,3 +252,41 @@ func (s *Suite) TestCreateTicketNegative() {
 // 		}
 // 	})
 // }
+
+func (s *Suite) TestDeleteTicket() {
+	t := s.T()
+
+	tcs := []struct {
+		key  string
+		id   string
+		code int
+	}{
+		{
+			key:  "Success",
+			id:   s.utils.GetTicketByOffset(s.ctx, 0),
+			code: http.StatusOK,
+		},
+		{
+			key:  "No content",
+			id:   s.utils.GetTicketByOffset(s.ctx, 0),
+			code: http.StatusNoContent,
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			req, err := http.NewRequest(
+				"DELETE",
+				fmt.Sprintf("/v1/tickets/%s", tc.id),
+				nil,
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, tc.code, w.Code, tc.key)
+		}
+	})
+}
