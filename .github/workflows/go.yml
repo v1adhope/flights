@@ -21,6 +21,9 @@ jobs:
       with:
         go-version: '1.23.2'
 
+    - name: Gen docs
+      run: swag init -g internal/controllers/http/v1/router.go
+
     - name: Build
       run: go build -v ./...
 
