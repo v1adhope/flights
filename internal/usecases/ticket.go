@@ -16,7 +16,7 @@ func (u *Usecases) Create(ctx context.Context, ticket entities.Ticket) (string, 
 
 	ticket.Id = id.String()
 
-	ticket.CreatedAt = time.Now()
+	ticket.CreatedAt = time.Now().UTC().Format(time.RFC3339)
 
 	if err := u.repos.Create(ctx, ticket); err != nil {
 		return "", err
@@ -39,4 +39,13 @@ func (u *Usecases) Delete(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+func (u *Usecases) GetAll(ctx context.Context) ([]entities.Ticket, error) {
+	tickets, err := u.repos.GetAll(ctx)
+	if err != nil {
+		return []entities.Ticket{}, err
+	}
+
+	return tickets, nil
 }

@@ -2,7 +2,6 @@ package v1
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/v1adhope/flights/internal/entities"
@@ -19,15 +18,16 @@ func registerTicketGroup(group *ticketGroup) {
 		ticketG.POST("/", group.create)
 		ticketG.PUT("/:id", group.replace)
 		ticketG.DELETE("/:id", group.delete)
+		ticketG.GET("/", group.all)
 	}
 }
 
 type ticketCreateReq struct {
-	Provider string    `json:"provider" example:"Emirates" binding:"required,max=255"`
-	FlyFrom  string    `json:"flyFrom" example:"Moscow" binding:"required,max=255"`
-	FlyTo    string    `json:"flyTo" example:"Hanoi" binding:"required,max=255"`
-	FlyAt    time.Time `json:"flyAt" example:"2022-01-02T15:04:05+03:00" binding:"required"`
-	ArriveAt time.Time `json:"arriveAt" example:"2022-01-03T15:04:05+07:00" binding:"required,gtfield=FlyAt"`
+	Provider string `json:"provider" example:"Emirates" binding:"required,max=255"`
+	FlyFrom  string `json:"flyFrom" example:"Moscow" binding:"required,max=255"`
+	FlyTo    string `json:"flyTo" example:"Hanoi" binding:"required,max=255"`
+	FlyAt    string `json:"flyAt" example:"2022-01-02T15:04:05+03:00" binding:"required,rfc3339Time"`
+	ArriveAt string `json:"arriveAt" example:"2022-01-03T15:04:05+07:00" binding:"required,rfc3339Time"`
 }
 
 // @tags Tickets
@@ -125,4 +125,19 @@ func (g *ticketGroup) delete(c *gin.Context) {
 	}
 
 	c.Status(http.StatusOK)
+}
+
+// @tags Tickets
+// @response 200
+// @response 204
+// @response 500
+// @router /tickets/ [GET]
+func (g *ticketGroup) all(c *gin.Context) {
+	tickets, err := g.ticketU.GetAll(c.Request.Context())
+	if err != nil {
+		setAnyError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, tickets)
 }

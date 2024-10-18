@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5"
 	"github.com/v1adhope/flights/internal/entities"
 )
 
@@ -84,8 +85,52 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 	}
 
 	if tag.RowsAffected() == 0 {
-		return fmt.Errorf("repository: ticket: Delete: Exec: %w", entities.ErrorNothingToDelete)
+		return fmt.Errorf("repository: ticket: Delete: RowsAffected: %w", entities.ErrorNothingToDelete)
 	}
 
 	return nil
+}
+
+func (r *Repository) GetAll(ctx context.Context) ([]entities.Ticket, error) {
+	sql, args, err := r.Builder.Select(
+		"ticket_id",
+		"provider",
+		"fly_from",
+		"fly_to",
+		"fly_at",
+		"arrive_at",
+		"created_at",
+	).
+		From("tickets").
+		ToSql()
+	if err != nil {
+		return []entities.Ticket{}, fmt.Errorf("repository: ticket: GetAll: Select: %w", err)
+	}
+
+	rows, err := r.Pool.Query(ctx, sql, args...)
+
+	tickets := []entities.Ticket{}
+	ticket := ticketDto{}
+
+	_, err = pgx.ForEachRow(rows, []any{
+		&ticket.Id,
+		&ticket.Provider,
+		&ticket.FlyFrom,
+		&ticket.FlyTo,
+		&ticket.FlyAt,
+		&ticket.ArriveAt,
+		&ticket.CreatedAt,
+	}, func() error {
+		tickets = append(tickets, ticket.toEntity())
+		return nil
+	})
+	if err != nil {
+		return []entities.Ticket{}, fmt.Errorf("repository: ticket: GetAll: ForEachRow: %w", err)
+	}
+
+	if len(tickets) == 0 {
+		return []entities.Ticket{}, fmt.Errorf("repository: ticket: GetAll: len: %w", entities.ErrorNothingFound)
+	}
+
+	return tickets, nil
 }

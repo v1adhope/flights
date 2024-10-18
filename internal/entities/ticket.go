@@ -1,13 +1,11 @@
 package entities
 
-import "time"
-
 type Ticket struct {
-	Id        string
-	Provider  string
-	FlyFrom   string
-	FlyTo     string
-	FlyAt     time.Time
-	ArriveAt  time.Time
-	CreatedAt time.Time
+	Id        string `json:"id"`
+	Provider  string `json:"provider"`
+	FlyFrom   string `json:"flyFrom"`
+	FlyTo     string `json:"flyTo"`
+	FlyAt     string `json:"flyAt"`
+	ArriveAt  string `json:"arriveAt"`
+	CreatedAt string `json:"createdAt"`
 }

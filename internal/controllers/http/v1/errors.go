@@ -38,7 +38,8 @@ func errorsHandler(log Logger) gin.HandlerFunc {
 			case gin.ErrorTypeAny:
 				switch {
 				case errors.Is(err, entities.ErrorNothingToChange),
-					errors.Is(err, entities.ErrorNothingToDelete):
+					errors.Is(err, entities.ErrorNothingToDelete),
+					errors.Is(err, entities.ErrorNothingFound):
 					log.Debug(ginErr, "%s", "http.StatusNoContent")
 					c.AbortWithStatus(http.StatusNoContent)
 				}
