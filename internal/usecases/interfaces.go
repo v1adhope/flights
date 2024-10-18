@@ -7,8 +7,8 @@ import (
 )
 
 type Reposer interface {
-	Create(ctx context.Context, ticket entities.Ticket) error
-	Replace(ctx context.Context, ticket entities.Ticket) error
-	Delete(ctx context.Context, id string) error
-	GetAll(ctx context.Context) ([]entities.Ticket, error)
+	CreateTicket(ctx context.Context, ticket entities.Ticket) error
+	ReplaceTicket(ctx context.Context, ticket entities.Ticket) error
+	DeleteTicket(ctx context.Context, id string) error
+	GetAllTickets(ctx context.Context) ([]entities.Ticket, error)
 }

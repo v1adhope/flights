@@ -47,7 +47,7 @@ func (g *ticketGroup) create(c *gin.Context) {
 		return
 	}
 
-	id, err := g.ticketU.Create(c.Request.Context(), entities.Ticket{
+	id, err := g.ticketU.CreateTicket(c.Request.Context(), entities.Ticket{
 		FlyFrom:  req.FlyFrom,
 		FlyTo:    req.FlyTo,
 		Provider: req.Provider,
@@ -87,7 +87,7 @@ func (g *ticketGroup) replace(c *gin.Context) {
 		return
 	}
 
-	err := g.ticketU.Replace(c.Request.Context(), entities.Ticket{
+	err := g.ticketU.ReplaceTicket(c.Request.Context(), entities.Ticket{
 		Id:       params.Id,
 		FlyFrom:  req.FlyFrom,
 		FlyTo:    req.FlyTo,
@@ -118,7 +118,7 @@ func (g *ticketGroup) delete(c *gin.Context) {
 		return
 	}
 
-	err := g.ticketU.Delete(c.Request.Context(), params.Id)
+	err := g.ticketU.DeleteTicket(c.Request.Context(), params.Id)
 	if err != nil {
 		setAnyError(c, err)
 		return
@@ -133,7 +133,7 @@ func (g *ticketGroup) delete(c *gin.Context) {
 // @response 500
 // @router /tickets/ [GET]
 func (g *ticketGroup) all(c *gin.Context) {
-	tickets, err := g.ticketU.GetAll(c.Request.Context())
+	tickets, err := g.ticketU.GetAllTickets(c.Request.Context())
 	if err != nil {
 		setAnyError(c, err)
 		return

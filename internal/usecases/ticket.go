@@ -8,7 +8,7 @@ import (
 	"github.com/v1adhope/flights/internal/entities"
 )
 
-func (u *Usecases) Create(ctx context.Context, ticket entities.Ticket) (string, error) {
+func (u *Usecases) CreateTicket(ctx context.Context, ticket entities.Ticket) (string, error) {
 	id, err := uuid.NewV6()
 	if err != nil {
 		return "", err
@@ -18,31 +18,31 @@ func (u *Usecases) Create(ctx context.Context, ticket entities.Ticket) (string, 
 
 	ticket.CreatedAt = time.Now().UTC().Format(time.RFC3339)
 
-	if err := u.repos.Create(ctx, ticket); err != nil {
+	if err := u.repos.CreateTicket(ctx, ticket); err != nil {
 		return "", err
 	}
 
 	return ticket.Id, nil
 }
 
-func (u *Usecases) Replace(ctx context.Context, ticket entities.Ticket) error {
-	if err := u.repos.Replace(ctx, ticket); err != nil {
+func (u *Usecases) ReplaceTicket(ctx context.Context, ticket entities.Ticket) error {
+	if err := u.repos.ReplaceTicket(ctx, ticket); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (u *Usecases) Delete(ctx context.Context, id string) error {
-	if err := u.repos.Delete(ctx, id); err != nil {
+func (u *Usecases) DeleteTicket(ctx context.Context, id string) error {
+	if err := u.repos.DeleteTicket(ctx, id); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (u *Usecases) GetAll(ctx context.Context) ([]entities.Ticket, error) {
-	tickets, err := u.repos.GetAll(ctx)
+func (u *Usecases) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
+	tickets, err := u.repos.GetAllTickets(ctx)
 	if err != nil {
 		return []entities.Ticket{}, err
 	}

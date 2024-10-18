@@ -9,7 +9,7 @@ import (
 	"github.com/v1adhope/flights/internal/entities"
 )
 
-func (r *Repository) Create(ctx context.Context, ticket entities.Ticket) error {
+func (r *Repository) CreateTicket(ctx context.Context, ticket entities.Ticket) error {
 	sql, args, err := r.Builder.Insert("tickets").
 		Columns(
 			"ticket_id",
@@ -41,7 +41,7 @@ func (r *Repository) Create(ctx context.Context, ticket entities.Ticket) error {
 	return nil
 }
 
-func (r *Repository) Replace(ctx context.Context, ticket entities.Ticket) error {
+func (r *Repository) ReplaceTicket(ctx context.Context, ticket entities.Ticket) error {
 	sql, args, err := r.Builder.Update("tickets").
 		SetMap(squirrel.Eq{
 			"provider":  ticket.Provider,
@@ -69,7 +69,8 @@ func (r *Repository) Replace(ctx context.Context, ticket entities.Ticket) error 
 
 	return nil
 }
-func (r *Repository) Delete(ctx context.Context, id string) error {
+
+func (r *Repository) DeleteTicket(ctx context.Context, id string) error {
 	sql, args, err := r.Builder.Delete("tickets").
 		Where(squirrel.Eq{
 			"ticket_id": id,
@@ -91,7 +92,7 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *Repository) GetAll(ctx context.Context) ([]entities.Ticket, error) {
+func (r *Repository) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
 	sql, args, err := r.Builder.Select(
 		"ticket_id",
 		"provider",
