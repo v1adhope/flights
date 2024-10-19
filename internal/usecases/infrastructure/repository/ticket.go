@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/v1adhope/flights/internal/entities"
 )
 
@@ -82,6 +84,13 @@ func (r *Repository) DeleteTicket(ctx context.Context, id entities.Id) error {
 
 	tag, err := r.Pool.Exec(ctx, sql, args...)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.ConstraintName == "fk_ticket_passenger_tickets_ticket_id" {
+				return fmt.Errorf("repository: document: BoundToTicket: Exec: %w", entities.ErrorsThereArePassengersOnRaice)
+			}
+		}
+
 		return fmt.Errorf("repository: ticket: DeleteTicket: Exec: %w", err)
 	}
 

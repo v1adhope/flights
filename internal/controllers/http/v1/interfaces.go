@@ -17,6 +17,10 @@ type PassengerUsecaser interface {
 	CreatePassenger(ctx context.Context, passenger entities.Passenger) (entities.Id, error)
 	ReplacePassenger(ctx context.Context, passenger entities.Passenger) error
 	DeletePassenger(ctx context.Context, id entities.Id) error
+	BoundToTicket(ctx context.Context, id entities.Id, ticketId entities.Id) error
+	UnboundToTicket(ctx context.Context, id entities.Id, ticketId entities.Id) error
+	GetPassengersByTicketId(ctx context.Context, id entities.Id) ([]entities.Passenger, error)
+
 	GetPassengers(ctx context.Context) ([]entities.Passenger, error)
 }
 

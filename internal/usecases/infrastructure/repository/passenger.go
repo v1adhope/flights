@@ -2,10 +2,11 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/v1adhope/flights/internal/entities"
 )
 
@@ -102,29 +103,90 @@ func (r *Repository) GetPassengers(ctx context.Context) ([]entities.Passenger, e
 		return []entities.Passenger{}, fmt.Errorf("repository: passenger: GetAllPassengers: Query: %w", err)
 	}
 
-	passengers := []entities.Passenger{}
-	passenger := entities.Passenger{}
+	return passengersRowReader(rows)
+}
 
-	_, err = pgx.ForEachRow(
-		rows,
-		[]any{
-			&passenger.Id,
-			&passenger.FirstName,
-			&passenger.LastName,
-			&passenger.MiddleName,
-		},
-		func() error {
-			passengers = append(passengers, passenger)
-			return nil
-		},
-	)
+func (r *Repository) BoundToTicket(ctx context.Context, id entities.Id, ticketId entities.Id) error {
+	sql, args, err := r.Builder.Insert("passenger_ticket").
+		Columns(
+			"passenger_id",
+			"ticket_id",
+		).
+		Values(
+			id.Value,
+			ticketId.Value,
+		).
+		ToSql()
 	if err != nil {
-		return []entities.Passenger{}, fmt.Errorf("repository: passenger: GetAllPassengers: ForEachRow: %w", err)
+		return fmt.Errorf("repository: passenger: BoundToTicket: Insert: %w", err)
 	}
 
-	if len(passengers) == 0 {
-		return []entities.Passenger{}, fmt.Errorf("repository: passenger: GetAllPassengers: len: %w", entities.ErrorNothingFound)
+	if _, err := r.Pool.Exec(ctx, sql, args...); err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.ConstraintName == "pk_ticket_passenger_ticket_id_passenger_id" {
+				return fmt.Errorf("repository: document: BoundToTicket: Exec: %w", entities.ErrorHasAlreadyExists)
+			}
+
+			if pgErr.ConstraintName == "fk_ticket_passenger_passenger_passenger_id" {
+				return fmt.Errorf("repository: document: BoundToTicket: Exec: %w", entities.ErrorPassengerDoesNotExists)
+			}
+
+			if pgErr.ConstraintName == "fk_ticket_passenger_tickets_ticket_id" {
+				return fmt.Errorf("repository: document: BoundToTicket: Exec: %w", entities.ErrorTicketDoesNotExists)
+			}
+		}
+
+		return fmt.Errorf("repository: passenger: BoundToTicket: Exec: %w", err)
 	}
 
-	return passengers, nil
+	return nil
+}
+
+func (r *Repository) UnboundToTicket(ctx context.Context, id entities.Id, ticketId entities.Id) error {
+	sql, args, err := r.Builder.Delete("passenger_ticket").
+		Where(squirrel.Eq{
+			"passenger_id": id.Value,
+			"ticket_id":    ticketId.Value,
+		}).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("repository: passenger: UnboundToTicket: Delete: %w", err)
+	}
+
+	tag, err := r.Pool.Exec(ctx, sql, args...)
+	if err != nil {
+		return fmt.Errorf("repository: passenger: UnboundToTicket: Exec: %w", err)
+	}
+
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("repository: passenger: UnboundToTicket: RowsAffected: %w", entities.ErrorNothingToDelete)
+	}
+
+	return nil
+}
+
+func (r *Repository) GetPassengersByTicketId(ctx context.Context, id entities.Id) ([]entities.Passenger, error) {
+	sql, args, err := r.Builder.Select(
+		"passengers.passenger_id",
+		"passengers.first_name",
+		"passengers.last_name",
+		"passengers.middle_name",
+	).
+		From("passenger_ticket").
+		LeftJoin("passengers using(passenger_id)").
+		Where(squirrel.Eq{
+			"ticket_id": id.Value,
+		}).
+		ToSql()
+	if err != nil {
+		return []entities.Passenger{}, fmt.Errorf("repository: passenger: GetPassengersByTicketId: Select: %w", err)
+	}
+
+	rows, err := r.Pool.Query(ctx, sql, args...)
+	if err != nil {
+		return []entities.Passenger{}, fmt.Errorf("repository: passenger: GetPassengersByTicketId: Query: %w", err)
+	}
+
+	return passengersRowReader(rows)
 }

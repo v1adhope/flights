@@ -18,7 +18,13 @@ func registgerPassengerGroup(group *passengerGroup) {
 		passengerG.POST("/", group.create)
 		passengerG.PUT("/:id", group.replace)
 		passengerG.DELETE("/:id", group.delete)
-		passengerG.GET("/", group.all)
+		passengerG.POST("/bound-to-ticket/", group.boundToTicket)
+		passengerG.POST("/unbound-from-ticket/", group.unboundToTicket)
+		passengerG.GET("/by-ticket-id/:id", group.allByTicketId)
+
+		if gin.Mode() == gin.DebugMode {
+			passengerG.GET("/", group.all)
+		}
 	}
 }
 
@@ -128,8 +134,98 @@ func (g *passengerGroup) delete(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+type passengerBoundingTicketReq struct {
+	Id       string `json:"id" example:"uuid" binding:"required,uuid"`
+	TicketId string `json:"ticketId" example:"uuid" binding:"required,uuid"`
+}
+
 // @tags Passengers
-// @description Support endpoint (not by terms)
+// @accept json
+// @param ids body passengerBoundingTicketReq true "Bounding request entity"
+// @response 201
+// @response 409
+// @response 422
+// @response 500
+// @router /passengers/bound-to-ticket/ [POST]
+func (g *passengerGroup) boundToTicket(c *gin.Context) {
+	req := passengerBoundingTicketReq{}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		setBindError(c, err)
+		return
+	}
+
+	err := g.passengerG.BoundToTicket(
+		c.Request.Context(),
+		entities.Id{req.Id},
+		entities.Id{req.TicketId},
+	)
+	if err != nil {
+		setAnyError(c, err)
+		return
+	}
+
+	c.Status(http.StatusCreated)
+}
+
+// @tags Passengers
+// @accept json
+// @param ids body passengerBoundingTicketReq true "Unbounding request entity"
+// @response 200
+// @response 204
+// @response 422
+// @response 500
+// @router /passengers/unbound-from-ticket/ [POST]
+func (g *passengerGroup) unboundToTicket(c *gin.Context) {
+	req := passengerBoundingTicketReq{}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		setBindError(c, err)
+		return
+	}
+
+	err := g.passengerG.UnboundToTicket(
+		c.Request.Context(),
+		entities.Id{req.Id},
+		entities.Id{req.TicketId},
+	)
+	if err != nil {
+		setAnyError(c, err)
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+// @tags Passengers
+// @param id path string true "Ticket id (uuid)"
+// @response 200 {array} entities.Passenger
+// @response 204
+// @response 422
+// @response 500
+// @router /passengers/by-ticket-id/{id} [GET]
+func (g *passengerGroup) allByTicketId(c *gin.Context) {
+	params := id{}
+
+	if err := c.ShouldBindUri(&params); err != nil {
+		setBindError(c, err)
+		return
+	}
+
+	passengers, err := g.passengerG.GetPassengersByTicketId(
+		c.Request.Context(),
+		entities.Id{params.Value},
+	)
+	if err != nil {
+		setAnyError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, passengers)
+}
+
+// @tags Passengers
+// @description Support endpoint (not by terms). Avaible only within gin debug
 // @response 200
 // @response 204
 // @response 500

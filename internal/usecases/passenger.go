@@ -39,6 +39,31 @@ func (u *Usecases) DeletePassenger(ctx context.Context, id entities.Id) error {
 	return nil
 }
 
+func (u *Usecases) BoundToTicket(ctx context.Context, id entities.Id, ticketId entities.Id) error {
+	if err := u.repos.BoundToTicket(ctx, id, ticketId); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *Usecases) UnboundToTicket(ctx context.Context, id entities.Id, ticketId entities.Id) error {
+	if err := u.repos.UnboundToTicket(ctx, id, ticketId); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *Usecases) GetPassengersByTicketId(ctx context.Context, id entities.Id) ([]entities.Passenger, error) {
+	passengers, err := u.repos.GetPassengersByTicketId(ctx, id)
+	if err != nil {
+		return []entities.Passenger{}, err
+	}
+
+	return passengers, nil
+}
+
 func (u *Usecases) GetPassengers(ctx context.Context) ([]entities.Passenger, error) {
 	passengers, err := u.repos.GetPassengers(ctx)
 	if err != nil {

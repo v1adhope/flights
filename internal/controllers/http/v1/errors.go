@@ -44,9 +44,14 @@ func errorsHandler(log Logger) gin.HandlerFunc {
 					c.AbortWithStatus(http.StatusNoContent)
 					return
 				case errors.Is(err, entities.ErrorHasAlreadyExists),
-					errors.Is(err, entities.ErrorPassengerDoesNotExists):
+					errors.Is(err, entities.ErrorPassengerDoesNotExists),
+					errors.Is(err, entities.ErrorTicketDoesNotExists):
 					log.Debug(ginErr, "%s", "StatusConflict")
-					abortWithErrorMsg(c, http.StatusConflict, entities.ErrorHasAlreadyExists.Error())
+					abortWithErrorMsg(c, http.StatusConflict, err.Error())
+					return
+				case errors.Is(err, entities.ErrorsThereArePassengersOnRaice):
+					log.Debug(ginErr, "%s", "StatusForbidden")
+					abortWithErrorMsg(c, http.StatusForbidden, err.Error())
 					return
 				}
 			}

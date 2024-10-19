@@ -292,6 +292,11 @@ func (s *Suite) Test1dDeleteTicket() {
 			id:   s.utils.GetTicketByOffset(s.ctx, 1),
 			code: http.StatusNoContent,
 		},
+		{
+			key:  "Wrong id",
+			id:   "01ef8e28-1800-6569-ac7c",
+			code: http.StatusUnprocessableEntity,
+		},
 	}
 
 	t.Run("", func(t *testing.T) {
@@ -549,6 +554,11 @@ func (s *Suite) Test1hDeletePassenger() {
 			key:  "No content",
 			id:   s.utils.GetPassengerByOffset(s.ctx, 1),
 			code: http.StatusNoContent,
+		},
+		{
+			key:  "Wrong id",
+			id:   "01ef8e28-1800-6569-ac7c",
+			code: http.StatusUnprocessableEntity,
 		},
 	}
 
@@ -808,6 +818,11 @@ func (s *Suite) Test1mDeleteDocument() {
 			id:   s.utils.GetDocumentByOffset(s.ctx, 1),
 			code: http.StatusNoContent,
 		},
+		{
+			key:  "Wrong id",
+			id:   "01ef8e28-1800-6569-ac7c",
+			code: http.StatusUnprocessableEntity,
+		},
 	}
 
 	t.Run("", func(t *testing.T) {
@@ -882,7 +897,227 @@ func (s *Suite) Test1nGetDocumentsByPassengerId() {
 			err = json.NewDecoder(w.Body).Decode(&documents)
 			assert.NoError(t, err, tc.key)
 
-			assert.Equal(t, tc.expected, documents)
+			assert.Equal(t, tc.expected, documents, tc.key)
+		}
+	})
+}
+
+// INFO: passanger,  ticket
+
+type passengerBoundingTicketReq struct {
+	Id       string `json:"id"`
+	TicketId string `json:"ticketId"`
+}
+
+func (s *Suite) Test1oBoundPassengerToTicket() {
+	t := s.T()
+
+	tcs := []struct {
+		key  string
+		body passengerBoundingTicketReq
+		code int
+	}{
+		{
+			key: "1",
+			body: passengerBoundingTicketReq{
+				Id:       s.utils.GetPassengerByOffset(s.ctx, 0),
+				TicketId: s.utils.GetTicketByOffset(s.ctx, 0),
+			},
+			code: http.StatusCreated,
+		},
+		{
+			key: "1",
+			body: passengerBoundingTicketReq{
+				Id:       s.utils.GetPassengerByOffset(s.ctx, 1),
+				TicketId: s.utils.GetTicketByOffset(s.ctx, 0),
+			},
+			code: http.StatusCreated,
+		},
+		{
+			key: "Has already bounded",
+			body: passengerBoundingTicketReq{
+				Id:       s.utils.GetPassengerByOffset(s.ctx, 0),
+				TicketId: s.utils.GetTicketByOffset(s.ctx, 0),
+			},
+			code: http.StatusConflict,
+		},
+		{
+			key: "Wrong id",
+			body: passengerBoundingTicketReq{
+				Id:       "01ef8e24-55c9-6316-ac7c",
+				TicketId: s.utils.GetTicketByOffset(s.ctx, 0),
+			},
+			code: http.StatusUnprocessableEntity,
+		},
+		{
+			key: "Passenger by id not found",
+			body: passengerBoundingTicketReq{
+				Id:       "01ef8e24-55c9-6316-ac7c-0242ac120003",
+				TicketId: s.utils.GetTicketByOffset(s.ctx, 0),
+			},
+			code: http.StatusConflict,
+		},
+		{
+			key: "Ticket by id not found",
+			body: passengerBoundingTicketReq{
+				Id:       s.utils.GetPassengerByOffset(s.ctx, 0),
+				TicketId: "01ef8e24-55c9-6316-ac7c-0242ac120003",
+			},
+			code: http.StatusConflict,
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			jsonData, err := json.Marshal(tc.body)
+			assert.NoError(t, err, tc.key)
+
+			req, err := http.NewRequest(
+				http.MethodPost,
+				"/v1/passengers/bound-to-ticket/",
+				strings.NewReader(string(jsonData)),
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, tc.code, w.Code, tc.key)
+		}
+	})
+}
+
+func (s *Suite) Test1qForbidenDeleteTicketIfPassengersOnBoarding() {
+	t := s.T()
+
+	tcs := []struct {
+		key  string
+		id   string
+		code int
+	}{
+		{
+			key:  "1",
+			id:   s.utils.GetTicketByOffset(s.ctx, 0),
+			code: http.StatusForbidden,
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			req, err := http.NewRequest(
+				http.MethodDelete,
+				fmt.Sprintf("/v1/tickets/%s", tc.id),
+				nil,
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, tc.code, w.Code, tc.key)
+		}
+	})
+}
+
+func (s *Suite) Test1rUnboundPassengerToTicket() {
+	t := s.T()
+
+	tcs := []struct {
+		key  string
+		body passengerBoundingTicketReq
+		code int
+	}{
+		{
+			key: "1",
+			body: passengerBoundingTicketReq{
+				Id:       s.utils.GetPassengerByOffset(s.ctx, 1),
+				TicketId: s.utils.GetTicketByOffset(s.ctx, 0),
+			},
+			code: http.StatusOK,
+		},
+		{
+			key: "Nothing to unbound",
+			body: passengerBoundingTicketReq{
+				Id:       s.utils.GetPassengerByOffset(s.ctx, 1),
+				TicketId: s.utils.GetTicketByOffset(s.ctx, 0),
+			},
+			code: http.StatusNoContent,
+		},
+		{
+			key: "Wrong id",
+			body: passengerBoundingTicketReq{
+				Id:       "01ef8e24-55c9-6316-ac7c",
+				TicketId: s.utils.GetTicketByOffset(s.ctx, 0),
+			},
+			code: http.StatusUnprocessableEntity,
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			jsonData, err := json.Marshal(tc.body)
+			assert.NoError(t, err, tc.key)
+
+			req, err := http.NewRequest(
+				http.MethodPost,
+				"/v1/passengers/unbound-from-ticket/",
+				strings.NewReader(string(jsonData)),
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, tc.code, w.Code, tc.key)
+		}
+	})
+}
+
+func (s *Suite) Test1sGetPassengersByTicketIdPositive() {
+	t := s.T()
+
+	tcs := []struct {
+		key      string
+		id       string
+		expected []passenger
+	}{
+		{
+			key: "1",
+			id:  s.utils.GetTicketByOffset(s.ctx, 0),
+			expected: []passenger{
+				{
+					Id:         s.utils.GetPassengerByOffset(s.ctx, 0),
+					FirstName:  "Riley",
+					LastName:   "Scott",
+					MiddleName: "Reed",
+				},
+			},
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			req, err := http.NewRequest(
+				http.MethodGet,
+				fmt.Sprintf("/v1/passengers/by-ticket-id/%s", tc.id),
+				nil,
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusOK, w.Code, tc.key)
+
+			passengers := []passenger{}
+			err = json.NewDecoder(w.Body).Decode(&passengers)
+			assert.NoError(t, err, tc.key)
+
+			assert.Equal(t, tc.expected, passengers, tc.key)
 		}
 	})
 }
