@@ -101,6 +101,15 @@ type id struct {
 	Id string `json:"id"`
 }
 
+func convertTime(target string) (string, error) {
+	timeT, err := time.Parse(time.RFC3339, target)
+	if err != nil {
+		return "", err
+	}
+
+	return timeT.UTC().Format(time.RFC3339), nil
+}
+
 // INFO: tickets
 
 type ticketCreateReq struct {
@@ -318,10 +327,13 @@ func (s *Suite) Test1dDeleteTicket() {
 }
 
 type ticket struct {
-	Id        string `json:"id"`
-	Provider  string `json:"provider"`
-	FlyFrom   string `json:"flyFrom"`
-	FlyTo     string `json:"flyTo"`
+	Id       string `json:"id"`
+	Provider string `json:"provider"`
+	FlyFrom  string `json:"flyFrom"`
+	FlyTo    string `json:"flyTo"`
+}
+
+type timeFieldsTicket struct {
 	FlyAt     string `json:"flyAt"`
 	ArriveAt  string `json:"arriveAt"`
 	CreatedAt string `json:"createdAt"`
@@ -342,16 +354,12 @@ func (s *Suite) Test1dGetTicketsPositive() {
 					Provider: "Emirates",
 					FlyFrom:  "Moscow",
 					FlyTo:    "Hanoi",
-					FlyAt:    "2022-01-02T12:04:05Z",
-					ArriveAt: "2022-01-03T08:04:05Z",
 				},
 				{
 					Id:       s.utils.GetTicketByOffset(s.ctx, 1),
 					Provider: "China Airlines",
 					FlyFrom:  "Beijing",
 					FlyTo:    "Moscow",
-					FlyAt:    "2023-01-02T07:04:05Z",
-					ArriveAt: "2023-01-03T12:04:05Z",
 				},
 			},
 		},
@@ -373,21 +381,22 @@ func (s *Suite) Test1dGetTicketsPositive() {
 			assert.Equal(t, http.StatusOK, w.Code, tc.key)
 
 			tickets := []ticket{}
-			err = json.NewDecoder(w.Body).Decode(&tickets)
+			err = json.NewDecoder(w.Result().Body).Decode(&tickets)
 			assert.NoError(t, err, tc.key)
 
-			for i := range tc.expected {
-				flyAtRightFormat, err := time.Parse(time.RFC3339, tickets[i].FlyAt)
-				assert.NoError(t, err, tc.key, i)
-				arriveToRightFormat, err := time.Parse(time.RFC3339, tickets[i].ArriveAt)
-				assert.NoError(t, err, tc.key, i)
+			assert.Equal(t, tc.expected, tickets, tc.key)
 
-				assert.Equal(t, tc.expected[i].Id, tickets[i].Id, tc.key, i)
-				assert.Equal(t, tc.expected[i].Provider, tickets[i].Provider, tc.key, i)
-				assert.Equal(t, tc.expected[i].FlyFrom, tickets[i].FlyFrom, tc.key, i)
-				assert.Equal(t, tc.expected[i].FlyTo, tickets[i].FlyTo, tc.key, i)
-				assert.Equal(t, tc.expected[i].FlyAt, flyAtRightFormat.UTC().Format(time.RFC3339), tc.key, i)
-				assert.Equal(t, tc.expected[i].ArriveAt, arriveToRightFormat.UTC().Format(time.RFC3339), tc.key, i)
+			timeFields := []timeFieldsTicket{}
+			err = json.NewDecoder(w.Body).Decode(&timeFields)
+			assert.NoError(t, err, tc.key)
+
+			for _, tf := range timeFields {
+				_, err = convertTime(tf.FlyAt)
+				assert.NoError(t, err, tc.key)
+				_, err = convertTime(tf.ArriveAt)
+				assert.NoError(t, err, tc.key)
+				_, err = convertTime(tf.CreatedAt)
+				assert.NoError(t, err, tc.key)
 			}
 		}
 	})
@@ -1118,6 +1127,111 @@ func (s *Suite) Test1sGetPassengersByTicketIdPositive() {
 			assert.NoError(t, err, tc.key)
 
 			assert.Equal(t, tc.expected, passengers, tc.key)
+		}
+	})
+}
+
+// INFO: passanger,  ticket, document
+
+type ticketWholeInfo struct {
+	Id         string                     `json:"id"`
+	Provider   string                     `json:"provider"`
+	FlyFrom    string                     `json:"flyFrom"`
+	FlyTo      string                     `json:"flyTo"`
+	Passengers []passengerTicketWholeInfo `json:"passengers,omitempty"`
+}
+
+type passengerTicketWholeInfo struct {
+	Id         string                    `json:"id"`
+	FirstName  string                    `json:"firstName"`
+	LastName   string                    `json:"lastName"`
+	MiddleName string                    `json:"middleName"`
+	Documents  []documentTicketWholeInfo `json:"documents,omitempty"`
+}
+
+type documentTicketWholeInfo struct {
+	Id     string `json:"id"`
+	Type   string `json:"type"`
+	Number string `json:"number"`
+}
+
+type timeFieldsTicketWholeInfo struct {
+	FlyAt     string `json:"flyAt"`
+	ArriveAt  string `json:"arriveAt"`
+	CreatedAt string `json:"createdAt"`
+}
+
+func (s *Suite) Test1tGetTicketWholeInfo() {
+	t := s.T()
+
+	tcs := []struct {
+		key      string
+		id       string
+		expected ticketWholeInfo
+	}{
+		{
+			key: "1",
+			id:  s.utils.GetTicketByOffset(s.ctx, 0),
+			expected: ticketWholeInfo{
+				Id:       s.utils.GetTicketByOffset(s.ctx, 0),
+				Provider: "Emirates",
+				FlyFrom:  "Moscow",
+				FlyTo:    "Hanoi",
+				Passengers: []passengerTicketWholeInfo{
+					{
+						Id:         s.utils.GetPassengerByOffset(s.ctx, 0),
+						FirstName:  "Riley",
+						LastName:   "Scott",
+						MiddleName: "Reed",
+						Documents: []documentTicketWholeInfo{
+							{
+								Id:     s.utils.GetDocumentByOffset(s.ctx, 0),
+								Type:   "Id card",
+								Number: "5555666777",
+							},
+							{
+								Id:     s.utils.GetDocumentByOffset(s.ctx, 1),
+								Type:   "International passport",
+								Number: "5555666888",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			req, err := http.NewRequest(
+				http.MethodGet,
+				fmt.Sprintf("/v1/tickets/whole-info/%s", tc.id),
+				nil,
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusOK, w.Code, tc.key)
+
+			ticket := ticketWholeInfo{}
+			err = json.NewDecoder(w.Result().Body).Decode(&ticket)
+			assert.NoError(t, err, tc.key)
+
+			assert.Equal(t, tc.expected, ticket, tc.key)
+
+			timeFields := timeFieldsTicketWholeInfo{}
+			err = json.NewDecoder(w.Body).Decode(&timeFields)
+			assert.NoError(t, err, tc.key)
+
+			_, err = convertTime(timeFields.FlyAt)
+			assert.NoError(t, err, tc.key)
+			_, err = convertTime(timeFields.ArriveAt)
+			assert.NoError(t, err, tc.key)
+			_, err = convertTime(timeFields.CreatedAt)
+			assert.NoError(t, err, tc.key)
 		}
 	})
 }

@@ -11,6 +11,7 @@ type TicketUsecaser interface {
 	ReplaceTicket(ctx context.Context, ticket entities.Ticket) error
 	DeleteTicket(ctx context.Context, id entities.Id) error
 	GetTickets(ctx context.Context) ([]entities.Ticket, error)
+	GetWholeInfoAboutTicket(ctx context.Context, id entities.Id) (entities.TicketWholeInfo, error)
 }
 
 type PassengerUsecaser interface {

@@ -28,3 +28,40 @@ func (d *ticketDto) toEntity() entities.Ticket {
 		CreatedAt: d.CreatedAt.Time.Format(time.RFC3339),
 	}
 }
+
+type passengerTicketWholeInfoDto struct {
+	Id         *string
+	FirstName  *string
+	LastName   *string
+	MiddleName *string
+}
+
+func (d *passengerTicketWholeInfoDto) toEntity() entities.Passenger {
+	if d.Id == nil {
+		return entities.Passenger{}
+	}
+	return entities.Passenger{
+		Id:         *d.Id,
+		FirstName:  *d.FirstName,
+		LastName:   *d.LastName,
+		MiddleName: *d.MiddleName,
+	}
+}
+
+type documentTicketWholeInfoDto struct {
+	Id     *string
+	Type   *string
+	Number *string
+}
+
+func (d *documentTicketWholeInfoDto) toEntity() entities.DocumentTicketWholeInfo {
+	if d.Id == nil {
+		return entities.DocumentTicketWholeInfo{}
+	}
+
+	return entities.DocumentTicketWholeInfo{
+		Id:     *d.Id,
+		Type:   *d.Type,
+		Number: *d.Number,
+	}
+}

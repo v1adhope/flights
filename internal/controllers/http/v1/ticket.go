@@ -19,6 +19,7 @@ func registerTicketGroup(group *ticketGroup) {
 		ticketG.PUT("/:id", group.replace)
 		ticketG.DELETE("/:id", group.delete)
 		ticketG.GET("/", group.all)
+		ticketG.GET("/whole-info/:id", group.wholeInfo)
 	}
 }
 
@@ -34,7 +35,7 @@ type ticketCreateReq struct {
 // @accept json
 // @param ticket body ticketCreateReq true "Ticket request entity"
 // @response 201
-// @header 201 {string} location "Return /v1/tickets/{id} resource"
+// @header 201 {string} location "Return /v1/whole-info/{id} resource"
 // @response 204
 // @response 422
 // @response 500
@@ -61,7 +62,7 @@ func (g *ticketGroup) create(c *gin.Context) {
 		return
 	}
 
-	setLocationHeader(c, "/v1/tickets/", id.Value)
+	setLocationHeader(c, "/whole-info/", id.Value)
 
 	c.Status(http.StatusCreated)
 }
@@ -147,4 +148,30 @@ func (g *ticketGroup) all(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, tickets)
+}
+
+// @tags Tickets
+// @param id path string true "Ticket id (uuid)"
+// @response 200 {array} entities.TicketWholeInfo
+// @response 204
+// @response 500
+// @router /tickets/whole-info/{id} [GET]
+func (g *ticketGroup) wholeInfo(c *gin.Context) {
+	params := id{}
+
+	if err := c.ShouldBindUri(&params); err != nil {
+		setBindError(c, err)
+		return
+	}
+
+	ticket, err := g.ticketU.GetWholeInfoAboutTicket(
+		c.Request.Context(),
+		entities.Id{params.Value},
+	)
+	if err != nil {
+		setAnyError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, ticket)
 }

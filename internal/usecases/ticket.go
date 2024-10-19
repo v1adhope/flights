@@ -50,3 +50,12 @@ func (u *Usecases) GetTickets(ctx context.Context) ([]entities.Ticket, error) {
 
 	return tickets, nil
 }
+
+func (u *Usecases) GetWholeInfoAboutTicket(ctx context.Context, id entities.Id) (entities.TicketWholeInfo, error) {
+	tickets, err := u.repos.GetWholeInfoAboutTicket(ctx, id)
+	if err != nil {
+		return entities.TicketWholeInfo{}, err
+	}
+
+	return tickets, nil
+}

@@ -149,3 +149,108 @@ func (r *Repository) GetTickets(ctx context.Context) ([]entities.Ticket, error) 
 
 	return tickets, nil
 }
+
+// TODO: exclude ticket_id
+func (r *Repository) GetWholeInfoAboutTicket(ctx context.Context, id entities.Id) (entities.TicketWholeInfo, error) {
+	sql, args, err := r.Builder.Select(
+		"tickets.ticket_id",
+		"tickets.provider",
+		"tickets.fly_from",
+		"tickets.fly_to",
+		"tickets.fly_at",
+		"tickets.arrive_at",
+		"tickets.created_at",
+		"passengers.passenger_id",
+		"passengers.first_name",
+		"passengers.last_name",
+		"passengers.middle_name",
+		"documents.document_id",
+		"documents.type",
+		"documents.number",
+	).
+		From("tickets").
+		LeftJoin("passenger_ticket using(ticket_id)").
+		LeftJoin("passengers using(passenger_id)").
+		LeftJoin("documents using(passenger_id)").
+		Where(squirrel.Eq{
+			"ticket_id": id.Value,
+		}).
+		ToSql()
+	if err != nil {
+		return entities.TicketWholeInfo{}, fmt.Errorf("repository: ticket: GetWholeInfoAboutTicket: Select: %w", err)
+	}
+
+	rows, err := r.Pool.Query(ctx, sql, args...)
+	if err != nil {
+		return entities.TicketWholeInfo{}, fmt.Errorf("repository: ticket: GetWholeInfoAboutTicket: Query: %w", err)
+	}
+
+	ticketDto := ticketDto{}
+	passengerDto := passengerTicketWholeInfoDto{}
+	documentDto := documentTicketWholeInfoDto{}
+	documentsByPassenger := map[entities.Passenger][]entities.DocumentTicketWholeInfo{}
+
+	tag, err := pgx.ForEachRow(
+		rows,
+		[]any{
+			&ticketDto.Id,
+			&ticketDto.Provider,
+			&ticketDto.FlyFrom,
+			&ticketDto.FlyTo,
+			&ticketDto.FlyAt,
+			&ticketDto.ArriveAt,
+			&ticketDto.CreatedAt,
+			&passengerDto.Id,
+			&passengerDto.FirstName,
+			&passengerDto.LastName,
+			&passengerDto.MiddleName,
+			&documentDto.Id,
+			&documentDto.Type,
+			&documentDto.Number,
+		},
+		func() error {
+			if passengerDto.Id == nil {
+				return nil
+			}
+
+			passenger := passengerDto.toEntity()
+
+			if documentDto.Id == nil {
+				documentsByPassenger[passenger] = nil
+				return nil
+			}
+
+			if _, ok := documentsByPassenger[passenger]; !ok {
+				documentsByPassenger[passenger] = []entities.DocumentTicketWholeInfo{}
+			}
+
+			documentsByPassenger[passenger] = append(
+				documentsByPassenger[passenger],
+				documentDto.toEntity(),
+			)
+
+			return nil
+		},
+	)
+	if err != nil {
+		return entities.TicketWholeInfo{}, fmt.Errorf("repository: ticket: GetWholeInfoAboutTicket: ForEachRow: %w", err)
+	}
+
+	if tag.RowsAffected() == 0 {
+		return entities.TicketWholeInfo{}, fmt.Errorf("repository: ticket: GetWholeInfoAboutTicket: RowsAffected: %w", entities.ErrorNothingFound)
+	}
+
+	ticket := entities.TicketWholeInfo{
+		Ticket:     ticketDto.toEntity(),
+		Passengers: []entities.PassengerTicketWholeInfo{},
+	}
+
+	for passenger, document := range documentsByPassenger {
+		ticket.Passengers = append(ticket.Passengers, entities.PassengerTicketWholeInfo{
+			Passenger: passenger,
+			Documents: document,
+		})
+	}
+
+	return ticket, nil
+}

@@ -11,5 +11,5 @@ type id struct {
 }
 
 func setLocationHeader(c *gin.Context, url, id string) {
-	c.Header("location", fmt.Sprintf("%s%s", url, id))
+	c.Header("location", fmt.Sprintf("/v1%s%s", url, id))
 }

@@ -6,3 +6,8 @@ type Passenger struct {
 	LastName   string `json:"lastName" example:"Reyes"`
 	MiddleName string `json:"middleName" example:"Mejia"`
 }
+
+type PassengerTicketWholeInfo struct {
+	Passenger
+	Documents []DocumentTicketWholeInfo `json:"documents,omitempty"`
+}

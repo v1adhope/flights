@@ -9,3 +9,8 @@ type Ticket struct {
 	ArriveAt  string `json:"arriveAt" example:"2022-01-03T08:04:05Z"`
 	CreatedAt string `json:"createdAt" example:"timestampz"`
 }
+
+type TicketWholeInfo struct {
+	Ticket
+	Passengers []PassengerTicketWholeInfo `json:"passengers,omitempty"`
+}
