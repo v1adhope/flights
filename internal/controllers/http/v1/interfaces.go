@@ -24,6 +24,7 @@ type DocumentUsecaser interface {
 	CreateDocument(ctx context.Context, document entities.Document) (string, error)
 	ReplaceDocument(ctx context.Context, document entities.Document) error
 	DeleteDocument(ctx context.Context, id entities.Id) error
+	GetDocumentsByPassengerId(ctx context.Context, id entities.Id) ([]entities.Document, error)
 }
 
 type Logger interface {

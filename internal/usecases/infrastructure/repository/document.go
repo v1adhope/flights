@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/v1adhope/flights/internal/entities"
 )
@@ -22,7 +23,7 @@ func (r *Repository) CreateDocument(ctx context.Context, document entities.Docum
 			document.Id,
 			document.Type,
 			document.Number,
-			document.PassangerId,
+			document.PassengerId,
 		).
 		ToSql()
 	if err != nil {
@@ -60,7 +61,7 @@ func (r *Repository) ReplaceDocument(ctx context.Context, document entities.Docu
 		SetMap(squirrel.Eq{
 			"type":         document.Type,
 			"number":       document.Number,
-			"passenger_id": document.PassangerId,
+			"passenger_id": document.PassengerId,
 		}).
 		Where(squirrel.Eq{
 			"document_id": document.Id,
@@ -106,4 +107,53 @@ func (r *Repository) DeleteDocument(ctx context.Context, id entities.Id) error {
 	}
 
 	return nil
+}
+
+// TODO: exclude PassengerId from set
+func (r *Repository) GetDocumentsByPassengerId(ctx context.Context, id entities.Id) ([]entities.Document, error) {
+	sql, args, err := r.Builder.Select(
+		"document_id",
+		"type",
+		"number",
+		"passenger_id",
+	).
+		From("documents").
+		Where(squirrel.Eq{
+			"passenger_id": id.Value,
+		}).
+		ToSql()
+	if err != nil {
+		return []entities.Document{}, fmt.Errorf("repository: document: GetDocumentsByPassengerId: Select: %w", err)
+	}
+
+	rows, err := r.Pool.Query(ctx, sql, args...)
+	if err != nil {
+		return []entities.Document{}, fmt.Errorf("repository: document: GetDocumentsByPassengerId: Query: %w", err)
+	}
+
+	documents := []entities.Document{}
+	document := entities.Document{}
+
+	_, err = pgx.ForEachRow(
+		rows,
+		[]any{
+			&document.Id,
+			&document.Type,
+			&document.Number,
+			&document.PassengerId,
+		},
+		func() error {
+			documents = append(documents, document)
+			return nil
+		},
+	)
+	if err != nil {
+		return []entities.Document{}, fmt.Errorf("repository: document: GetDocumentsByPassengerId: ForEachRow: %w", err)
+	}
+
+	if len(documents) == 0 {
+		return []entities.Document{}, fmt.Errorf("repository: document: GetDocumentsByPassengerId: len: %w", entities.ErrorNothingFound)
+	}
+
+	return documents, nil
 }

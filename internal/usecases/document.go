@@ -38,3 +38,12 @@ func (u *Usecases) DeleteDocument(ctx context.Context, id entities.Id) error {
 
 	return nil
 }
+
+func (u *Usecases) GetDocumentsByPassengerId(ctx context.Context, id entities.Id) ([]entities.Document, error) {
+	documents, err := u.repos.GetDocumentsByPassengerId(ctx, id)
+	if err != nil {
+		return []entities.Document{}, err
+	}
+
+	return documents, nil
+}

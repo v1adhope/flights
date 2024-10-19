@@ -18,13 +18,14 @@ func registerDocumentGroup(group *documentGroup) {
 		documentG.POST("/", group.create)
 		documentG.PUT("/:id", group.replace)
 		documentG.DELETE("/:id", group.delete)
+		documentG.GET("/by-passenger/:id", group.allByPassengerId)
 	}
 }
 
 type documentCreateReq struct {
 	Type        string `json:"type" example:"Passport" binding:"required,oneof='Passport' 'Id card' 'International passport'"`
 	Number      string `json:"number" example:"5555444444" binding:"required,max=255"`
-	PassangerId string `json:"passangerId" example:"uuid" binding:"required,uuid"`
+	PassengerId string `json:"passengerId" example:"uuid" binding:"required,uuid"`
 }
 
 // @tags Documents
@@ -49,7 +50,7 @@ func (g *documentGroup) create(c *gin.Context) {
 		entities.Document{
 			Type:        req.Type,
 			Number:      req.Number,
-			PassangerId: req.PassangerId,
+			PassengerId: req.PassengerId,
 		},
 	)
 	if err != nil {
@@ -90,7 +91,7 @@ func (g *documentGroup) replace(c *gin.Context) {
 			Id:          params.Value,
 			Type:        req.Type,
 			Number:      req.Number,
-			PassangerId: req.PassangerId,
+			PassengerId: req.PassengerId,
 		},
 	)
 	if err != nil {
@@ -126,4 +127,31 @@ func (g *documentGroup) delete(c *gin.Context) {
 	}
 
 	c.Status(http.StatusOK)
+}
+
+// @tags Documents
+// @param id path string true "Passenger id (uuid)"
+// @response 200 {array} entities.Document
+// @response 204
+// @response 422
+// @response 500
+// @router /documents/by-passenger/{id} [GET]
+func (g *documentGroup) allByPassengerId(c *gin.Context) {
+	params := id{}
+
+	if err := c.ShouldBindUri(&params); err != nil {
+		setBindError(c, err)
+		return
+	}
+
+	documents, err := g.documentU.GetDocumentsByPassengerId(
+		c.Request.Context(),
+		entities.Id{params.Value},
+	)
+	if err != nil {
+		setAnyError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, documents)
 }

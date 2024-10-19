@@ -22,13 +22,13 @@ func (u *Utils) getByOffset(ctx context.Context, offset uint64, table string, co
 		Limit(1).
 		ToSql()
 	if err != nil {
-		log.Fatalf("testhelpers: utils: getByOffset: Select: %v", err)
+		log.Printf("testhelpers: utils: getByOffset: Select: %s: %v", table, err)
 	}
 
 	id := ""
 
 	if err := u.Pool.QueryRow(ctx, sql, args...).Scan(&id); err != nil {
-		log.Fatalf("testhelpers: utils: getByOffset: QueryRow: %v", err)
+		log.Printf("testhelpers: utils: getByOffset: QueryRow: %s: %v", table, err)
 	}
 
 	return id

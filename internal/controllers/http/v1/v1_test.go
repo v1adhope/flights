@@ -370,6 +370,7 @@ func (s *Suite) Test1dGetTicketsPositive() {
 			tickets := []ticket{}
 			err = json.NewDecoder(w.Body).Decode(&tickets)
 			assert.NoError(t, err, tc.key)
+
 			for i := range tc.expected {
 				flyAtRightFormat, err := time.Parse(time.RFC3339, tickets[i].FlyAt)
 				assert.NoError(t, err, tc.key, i)
@@ -630,7 +631,7 @@ type documentCreateReq struct {
 	Id          string
 	Type        string `json:"type"`
 	Number      string `json:"number"`
-	PassangerId string `json:"passangerId"`
+	PassengerId string `json:"passengerId"`
 }
 
 func (s *Suite) Test1jCreateDocumentPositive() {
@@ -645,7 +646,7 @@ func (s *Suite) Test1jCreateDocumentPositive() {
 			body: documentCreateReq{
 				Type:        "Passport",
 				Number:      "5555666777",
-				PassangerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+				PassengerId: s.utils.GetPassengerByOffset(s.ctx, 0),
 			},
 		},
 		{
@@ -653,7 +654,7 @@ func (s *Suite) Test1jCreateDocumentPositive() {
 			body: documentCreateReq{
 				Type:        "Id card",
 				Number:      "5555666777",
-				PassangerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+				PassengerId: s.utils.GetPassengerByOffset(s.ctx, 0),
 			},
 		},
 		{
@@ -661,7 +662,7 @@ func (s *Suite) Test1jCreateDocumentPositive() {
 			body: documentCreateReq{
 				Type:        "International passport",
 				Number:      "3333888000",
-				PassangerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+				PassengerId: s.utils.GetPassengerByOffset(s.ctx, 0),
 			},
 		},
 	}
@@ -704,7 +705,7 @@ func (s *Suite) Test1kCreateDocumentNegative() {
 			body: documentCreateReq{
 				Type:        "Passport",
 				Number:      "5555666777",
-				PassangerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+				PassengerId: s.utils.GetPassengerByOffset(s.ctx, 0),
 			},
 			code: http.StatusConflict,
 		},
@@ -713,7 +714,7 @@ func (s *Suite) Test1kCreateDocumentNegative() {
 			body: documentCreateReq{
 				Type:        "Birthday cert",
 				Number:      "5555666777",
-				PassangerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+				PassengerId: s.utils.GetPassengerByOffset(s.ctx, 0),
 			},
 			code: http.StatusUnprocessableEntity,
 		},
@@ -722,7 +723,7 @@ func (s *Suite) Test1kCreateDocumentNegative() {
 			body: documentCreateReq{
 				Type:        "International passport",
 				Number:      strings.Repeat("1", 256),
-				PassangerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+				PassengerId: s.utils.GetPassengerByOffset(s.ctx, 0),
 			},
 			code: http.StatusUnprocessableEntity,
 		},
@@ -762,7 +763,7 @@ func (s *Suite) Test1lReplaceDocument() {
 				Id:          s.utils.GetDocumentByOffset(s.ctx, 0),
 				Type:        "International passport",
 				Number:      "5555666888",
-				PassangerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+				PassengerId: s.utils.GetPassengerByOffset(s.ctx, 0),
 			},
 		},
 	}
@@ -823,6 +824,65 @@ func (s *Suite) Test1mDeleteDocument() {
 			s.router.ServeHTTP(w, req)
 
 			assert.Equal(t, tc.code, w.Code, tc.key)
+		}
+	})
+}
+
+type document struct {
+	Id          string `json:"id"`
+	Type        string `json:"type"`
+	Number      string `json:"number"`
+	PassengerId string `json:"passengerId"`
+}
+
+func (s *Suite) Test1nGetDocumentsByPassengerId() {
+	t := s.T()
+
+	tcs := []struct {
+		key      string
+		id       string
+		expected []document
+	}{
+		{
+			key: "1",
+			id:  s.utils.GetPassengerByOffset(s.ctx, 0),
+			expected: []document{
+				{
+					Id:          s.utils.GetDocumentByOffset(s.ctx, 0),
+					Type:        "Id card",
+					Number:      "5555666777",
+					PassengerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+				},
+				{
+					Id:          s.utils.GetDocumentByOffset(s.ctx, 1),
+					Type:        "International passport",
+					Number:      "5555666888",
+					PassengerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+				},
+			},
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			req, err := http.NewRequest(
+				http.MethodGet,
+				fmt.Sprintf("/v1/documents/by-passenger/%s", tc.id),
+				nil,
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusOK, w.Code, tc.key)
+
+			documents := []document{}
+			err = json.NewDecoder(w.Body).Decode(&documents)
+			assert.NoError(t, err, tc.key)
+
+			assert.Equal(t, tc.expected, documents)
 		}
 	})
 }
