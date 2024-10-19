@@ -40,8 +40,13 @@ func errorsHandler(log Logger) gin.HandlerFunc {
 				case errors.Is(err, entities.ErrorNothingToChange),
 					errors.Is(err, entities.ErrorNothingToDelete),
 					errors.Is(err, entities.ErrorNothingFound):
-					log.Debug(ginErr, "%s", "http.StatusNoContent")
+					log.Debug(ginErr, "%s", "StatusNoContent")
 					c.AbortWithStatus(http.StatusNoContent)
+					return
+				case errors.Is(err, entities.ErrorHasAlreadyExists),
+					errors.Is(err, entities.ErrorPassengerDoesNotExists):
+					log.Debug(ginErr, "%s", "StatusConflict")
+					abortWithErrorMsg(c, http.StatusConflict, entities.ErrorHasAlreadyExists.Error())
 					return
 				}
 			}

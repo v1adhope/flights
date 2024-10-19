@@ -70,10 +70,10 @@ func (r *Repository) ReplaceTicket(ctx context.Context, ticket entities.Ticket) 
 	return nil
 }
 
-func (r *Repository) DeleteTicket(ctx context.Context, id string) error {
+func (r *Repository) DeleteTicket(ctx context.Context, id entities.Id) error {
 	sql, args, err := r.Builder.Delete("tickets").
 		Where(squirrel.Eq{
-			"ticket_id": id,
+			"ticket_id": id.Value,
 		}).
 		ToSql()
 	if err != nil {
@@ -92,7 +92,7 @@ func (r *Repository) DeleteTicket(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *Repository) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
+func (r *Repository) GetTickets(ctx context.Context) ([]entities.Ticket, error) {
 	sql, args, err := r.Builder.Select(
 		"ticket_id",
 		"provider",

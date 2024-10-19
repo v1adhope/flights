@@ -62,10 +62,10 @@ func (r *Repository) ReplacePassenger(ctx context.Context, passenger entities.Pa
 	return nil
 }
 
-func (r *Repository) DeletePassenger(ctx context.Context, id string) error {
+func (r *Repository) DeletePassenger(ctx context.Context, id entities.Id) error {
 	sql, args, err := r.Builder.Delete("passengers").
 		Where(squirrel.Eq{
-			"passenger_id": id,
+			"passenger_id": id.Value,
 		}).
 		ToSql()
 	if err != nil {
@@ -78,13 +78,13 @@ func (r *Repository) DeletePassenger(ctx context.Context, id string) error {
 	}
 
 	if tag.RowsAffected() == 0 {
-		return fmt.Errorf("repository: ticket: DeletePassenger: RowsAffected: %w", entities.ErrorNothingToDelete)
+		return fmt.Errorf("repository: passenger: DeletePassenger: RowsAffected: %w", entities.ErrorNothingToDelete)
 	}
 
 	return nil
 }
 
-func (r *Repository) GetAllPassengers(ctx context.Context) ([]entities.Passenger, error) {
+func (r *Repository) GetPassengers(ctx context.Context) ([]entities.Passenger, error) {
 	sql, args, err := r.Builder.Select(
 		"passenger_id",
 		"first_name",

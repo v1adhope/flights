@@ -18,3 +18,14 @@ create table if not exists passengers (
 
   constraint pk_passengers_passenger_id primary key(passenger_id)
 );
+
+create table if not exists documents (
+  document_id uuid,
+  type varchar(255) not null,
+  number varchar(255) not null,
+  passenger_id uuid not null,
+
+  constraint pk_documents_document_id primary key(document_id),
+  constraint uq_documents_type_number unique(type, number),
+  constraint fk_document_passenger_passenger_id foreign key(passenger_id) references passengers(passenger_id)
+);

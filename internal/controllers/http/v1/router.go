@@ -32,6 +32,7 @@ func Register(r *Router) {
 
 		registerTicketGroup(&ticketGroup{rg, r.Usecases})
 		registgerPassengerGroup(&passengerGroup{rg, r.Usecases})
+		registerDocumentGroup(&documentGroup{rg, r.Usecases})
 	}
 }
 

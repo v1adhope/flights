@@ -31,7 +31,7 @@ type passengerCreateReq struct {
 // @tags Passengers
 // @accept json
 // @param passenger body passengerCreateReq true "Passenger request entity"
-// @response 201
+// @response 201 {object} entities.Id
 // @header 201 {string} location "Return /v/passenger/"
 // @response 204
 // @response 422
@@ -45,7 +45,7 @@ func (g *passengerGroup) create(c *gin.Context) {
 		return
 	}
 
-	err := g.passengerG.CreatePassenger(
+	id, err := g.passengerG.CreatePassenger(
 		c.Request.Context(),
 		entities.Passenger{
 			FirstName:  req.FirstName,
@@ -58,9 +58,7 @@ func (g *passengerGroup) create(c *gin.Context) {
 		return
 	}
 
-	setLocationHeader(c, "/v1/passangers/", "")
-
-	c.Status(http.StatusCreated)
+	c.JSON(http.StatusCreated, id)
 }
 
 // @tags Passengers
@@ -107,6 +105,7 @@ func (g *passengerGroup) replace(c *gin.Context) {
 // @param id path string true "Passenger id (uuid)"
 // @response 200
 // @response 204
+// @response 422
 // @response 500
 // @router /passengers/{id} [DELETE]
 func (g *passengerGroup) delete(c *gin.Context) {
@@ -117,7 +116,10 @@ func (g *passengerGroup) delete(c *gin.Context) {
 		return
 	}
 
-	err := g.passengerG.DeletePassenger(c.Request.Context(), params.Value)
+	err := g.passengerG.DeletePassenger(
+		c.Request.Context(),
+		entities.Id{params.Value},
+	)
 	if err != nil {
 		setAnyError(c, err)
 		return
@@ -127,12 +129,13 @@ func (g *passengerGroup) delete(c *gin.Context) {
 }
 
 // @tags Passengers
+// @description Support endpoint (not by terms)
 // @response 200
 // @response 204
 // @response 500
 // @router /passengers/ [GET]
 func (g *passengerGroup) all(c *gin.Context) {
-	passengers, err := g.passengerG.GetAllPassengers(c.Request.Context())
+	passengers, err := g.passengerG.GetPassengers(c.Request.Context())
 	if err != nil {
 		setAnyError(c, err)
 		return

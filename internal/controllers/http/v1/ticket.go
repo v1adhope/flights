@@ -61,7 +61,7 @@ func (g *ticketGroup) create(c *gin.Context) {
 		return
 	}
 
-	setLocationHeader(c, "/v1/tickets/", id)
+	setLocationHeader(c, "/v1/tickets/", id.Value)
 
 	c.Status(http.StatusCreated)
 }
@@ -122,7 +122,10 @@ func (g *ticketGroup) delete(c *gin.Context) {
 		return
 	}
 
-	err := g.ticketU.DeleteTicket(c.Request.Context(), params.Value)
+	err := g.ticketU.DeleteTicket(
+		c.Request.Context(),
+		entities.Id{params.Value},
+	)
 	if err != nil {
 		setAnyError(c, err)
 		return
@@ -132,12 +135,12 @@ func (g *ticketGroup) delete(c *gin.Context) {
 }
 
 // @tags Tickets
-// @response 200
+// @response 200 {array} entities.Ticket
 // @response 204
 // @response 500
 // @router /tickets/ [GET]
 func (g *ticketGroup) all(c *gin.Context) {
-	tickets, err := g.ticketU.GetAllTickets(c.Request.Context())
+	tickets, err := g.ticketU.GetTickets(c.Request.Context())
 	if err != nil {
 		setAnyError(c, err)
 		return

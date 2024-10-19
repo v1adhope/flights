@@ -7,17 +7,23 @@ import (
 )
 
 type TicketUsecaser interface {
-	CreateTicket(ctx context.Context, ticket entities.Ticket) (string, error)
+	CreateTicket(ctx context.Context, ticket entities.Ticket) (entities.Id, error)
 	ReplaceTicket(ctx context.Context, ticket entities.Ticket) error
-	DeleteTicket(ctx context.Context, id string) error
-	GetAllTickets(ctx context.Context) ([]entities.Ticket, error)
+	DeleteTicket(ctx context.Context, id entities.Id) error
+	GetTickets(ctx context.Context) ([]entities.Ticket, error)
 }
 
 type PassengerUsecaser interface {
-	CreatePassenger(ctx context.Context, passenger entities.Passenger) error
+	CreatePassenger(ctx context.Context, passenger entities.Passenger) (entities.Id, error)
 	ReplacePassenger(ctx context.Context, passenger entities.Passenger) error
-	DeletePassenger(ctx context.Context, id string) error
-	GetAllPassengers(ctx context.Context) ([]entities.Passenger, error)
+	DeletePassenger(ctx context.Context, id entities.Id) error
+	GetPassengers(ctx context.Context) ([]entities.Passenger, error)
+}
+
+type DocumentUsecaser interface {
+	CreateDocument(ctx context.Context, document entities.Document) (string, error)
+	ReplaceDocument(ctx context.Context, document entities.Document) error
+	DeleteDocument(ctx context.Context, id entities.Id) error
 }
 
 type Logger interface {

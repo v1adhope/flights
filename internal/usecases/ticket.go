@@ -9,10 +9,10 @@ import (
 	"github.com/v1adhope/flights/internal/entities"
 )
 
-func (u *Usecases) CreateTicket(ctx context.Context, ticket entities.Ticket) (string, error) {
+func (u *Usecases) CreateTicket(ctx context.Context, ticket entities.Ticket) (entities.Id, error) {
 	id, err := uuid.NewV6()
 	if err != nil {
-		return "", fmt.Errorf("usecases: ticket: CreateTicket: NewV6: %w", err)
+		return entities.Id{}, fmt.Errorf("usecases: ticket: CreateTicket: NewV6: %w", err)
 	}
 
 	ticket.Id = id.String()
@@ -20,10 +20,10 @@ func (u *Usecases) CreateTicket(ctx context.Context, ticket entities.Ticket) (st
 	ticket.CreatedAt = time.Now().UTC().Format(time.RFC3339)
 
 	if err := u.repos.CreateTicket(ctx, ticket); err != nil {
-		return "", err
+		return entities.Id{}, err
 	}
 
-	return ticket.Id, nil
+	return entities.Id{ticket.Id}, nil
 }
 
 func (u *Usecases) ReplaceTicket(ctx context.Context, ticket entities.Ticket) error {
@@ -34,7 +34,7 @@ func (u *Usecases) ReplaceTicket(ctx context.Context, ticket entities.Ticket) er
 	return nil
 }
 
-func (u *Usecases) DeleteTicket(ctx context.Context, id string) error {
+func (u *Usecases) DeleteTicket(ctx context.Context, id entities.Id) error {
 	if err := u.repos.DeleteTicket(ctx, id); err != nil {
 		return err
 	}
@@ -42,8 +42,8 @@ func (u *Usecases) DeleteTicket(ctx context.Context, id string) error {
 	return nil
 }
 
-func (u *Usecases) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
-	tickets, err := u.repos.GetAllTickets(ctx)
+func (u *Usecases) GetTickets(ctx context.Context) ([]entities.Ticket, error) {
+	tickets, err := u.repos.GetTickets(ctx)
 	if err != nil {
 		return []entities.Ticket{}, err
 	}

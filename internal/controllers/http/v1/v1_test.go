@@ -95,6 +95,12 @@ func TestSuite(t *testing.T) {
 	suite.Run(t, new(Suite))
 }
 
+// INFO: general
+
+type id struct {
+	Id string `json:"id"`
+}
+
 // INFO: tickets
 
 type ticketCreateReq struct {
@@ -106,7 +112,7 @@ type ticketCreateReq struct {
 	ArriveAt string `json:"arriveAt"`
 }
 
-func (s *Suite) Test1CreateTicketPositive() {
+func (s *Suite) Test1aCreateTicketPositive() {
 	t := s.T()
 
 	tcs := []struct {
@@ -166,7 +172,7 @@ func (s *Suite) Test1CreateTicketPositive() {
 	})
 }
 
-func (s *Suite) Test1CreateTicketNegative() {
+func (s *Suite) Test1bCreateTicketNegative() {
 	t := s.T()
 
 	tcs := []struct {
@@ -227,7 +233,7 @@ func (s *Suite) Test1CreateTicketNegative() {
 }
 
 // TODO: error
-// func (s *Suite) Test2ReplaceTicketPositive() {
+// func (s *Suite) Test1cReplaceTicketPositive() {
 // 	t := s.T()
 //
 // 	tcs := []struct {
@@ -268,7 +274,7 @@ func (s *Suite) Test1CreateTicketNegative() {
 // 	})
 // }
 
-func (s *Suite) Test3DeleteTicket() {
+func (s *Suite) Test1dDeleteTicket() {
 	t := s.T()
 
 	tcs := []struct {
@@ -316,7 +322,7 @@ type ticket struct {
 	CreatedAt string `json:"createdAt"`
 }
 
-func (s *Suite) Test4GetAllTicketsPositive() {
+func (s *Suite) Test1dGetTicketsPositive() {
 	t := s.T()
 
 	tcs := []struct {
@@ -390,7 +396,7 @@ type passengerCreateReq struct {
 	MiddleName string `json:"middleName"`
 }
 
-func (s *Suite) Test1CreatePassengerPositive() {
+func (s *Suite) Test1eCreatePassengerPositive() {
 	t := s.T()
 
 	tcs := []struct {
@@ -413,7 +419,6 @@ func (s *Suite) Test1CreatePassengerPositive() {
 				MiddleName: "Reed",
 			},
 		},
-
 		{
 			key: "2",
 			body: passengerCreateReq{
@@ -441,11 +446,15 @@ func (s *Suite) Test1CreatePassengerPositive() {
 			s.router.ServeHTTP(w, req)
 
 			assert.Equal(t, http.StatusCreated, w.Code, tc.key)
+
+			resp := id{}
+			err = json.NewDecoder(w.Body).Decode(&resp)
+			assert.NoError(t, err, tc.key)
 		}
 	})
 }
 
-func (s *Suite) Test1CreatePassengerNegative() {
+func (s *Suite) Test1fCreatePassengerNegative() {
 	t := s.T()
 
 	tcs := []struct {
@@ -483,7 +492,7 @@ func (s *Suite) Test1CreatePassengerNegative() {
 	})
 }
 
-func (s *Suite) Test2ReplacePassengerPositive() {
+func (s *Suite) Test1gReplacePassengerPositive() {
 	t := s.T()
 
 	tcs := []struct {
@@ -522,7 +531,7 @@ func (s *Suite) Test2ReplacePassengerPositive() {
 	})
 }
 
-func (s *Suite) Test3DeletePassenger() {
+func (s *Suite) Test1hDeletePassenger() {
 	t := s.T()
 
 	tcs := []struct {
@@ -567,7 +576,7 @@ type passenger struct {
 	MiddleName string `json:"middleName"`
 }
 
-func (s *Suite) Test4GetAllPassengers() {
+func (s *Suite) Test1iGetPassengers() {
 	t := s.T()
 
 	tcs := []struct {
@@ -611,6 +620,209 @@ func (s *Suite) Test4GetAllPassengers() {
 			assert.NoError(t, err, tc.key)
 
 			assert.Equal(t, tc.expected, passengers, tc.key)
+		}
+	})
+}
+
+// INFO: documents
+
+type documentCreateReq struct {
+	Id          string
+	Type        string `json:"type"`
+	Number      string `json:"number"`
+	PassangerId string `json:"passangerId"`
+}
+
+func (s *Suite) Test1jCreateDocumentPositive() {
+	t := s.T()
+
+	tcs := []struct {
+		key  string
+		body documentCreateReq
+	}{
+		{
+			key: "1",
+			body: documentCreateReq{
+				Type:        "Passport",
+				Number:      "5555666777",
+				PassangerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+			},
+		},
+		{
+			key: "2",
+			body: documentCreateReq{
+				Type:        "Id card",
+				Number:      "5555666777",
+				PassangerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+			},
+		},
+		{
+			key: "1",
+			body: documentCreateReq{
+				Type:        "International passport",
+				Number:      "3333888000",
+				PassangerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+			},
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			jsonData, err := json.Marshal(tc.body)
+			assert.NoError(t, err, tc.key)
+
+			req, err := http.NewRequest(
+				http.MethodPost,
+				"/v1/documents/",
+				strings.NewReader(string(jsonData)),
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusCreated, w.Code, tc.key)
+
+			resp := id{}
+			err = json.NewDecoder(w.Body).Decode(&resp)
+			assert.NoError(t, err, tc.key)
+		}
+	})
+}
+
+func (s *Suite) Test1kCreateDocumentNegative() {
+	t := s.T()
+
+	tcs := []struct {
+		key  string
+		body documentCreateReq
+		code int
+	}{
+		{
+			key: "Has already exists",
+			body: documentCreateReq{
+				Type:        "Passport",
+				Number:      "5555666777",
+				PassangerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+			},
+			code: http.StatusConflict,
+		},
+		{
+			key: "Not allowed document type",
+			body: documentCreateReq{
+				Type:        "Birthday cert",
+				Number:      "5555666777",
+				PassangerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+			},
+			code: http.StatusUnprocessableEntity,
+		},
+		{
+			key: "Number overflow",
+			body: documentCreateReq{
+				Type:        "International passport",
+				Number:      strings.Repeat("1", 256),
+				PassangerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+			},
+			code: http.StatusUnprocessableEntity,
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			jsonData, err := json.Marshal(tc.body)
+			assert.NoError(t, err, tc.key)
+
+			req, err := http.NewRequest(
+				http.MethodPost,
+				"/v1/documents/",
+				strings.NewReader(string(jsonData)),
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, tc.code, w.Code, tc.key)
+		}
+	})
+}
+
+func (s *Suite) Test1lReplaceDocument() {
+	t := s.T()
+
+	tcs := []struct {
+		key  string
+		body documentCreateReq
+	}{
+		{
+			key: "Has already exists",
+			body: documentCreateReq{
+				Id:          s.utils.GetDocumentByOffset(s.ctx, 0),
+				Type:        "International passport",
+				Number:      "5555666888",
+				PassangerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+			},
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			jsonData, err := json.Marshal(tc.body)
+			assert.NoError(t, err, tc.key)
+
+			req, err := http.NewRequest(
+				http.MethodPut,
+				fmt.Sprintf("/v1/documents/%s", tc.body.Id),
+				strings.NewReader(string(jsonData)),
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusOK, w.Code, tc.key)
+		}
+	})
+
+}
+
+func (s *Suite) Test1mDeleteDocument() {
+	t := s.T()
+
+	tcs := []struct {
+		key  string
+		id   string
+		code int
+	}{
+		{
+			key:  "Success",
+			id:   s.utils.GetDocumentByOffset(s.ctx, 1),
+			code: http.StatusOK,
+		},
+		{
+			key:  "No content",
+			id:   s.utils.GetDocumentByOffset(s.ctx, 1),
+			code: http.StatusNoContent,
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			req, err := http.NewRequest(
+				http.MethodDelete,
+				fmt.Sprintf("/v1/documents/%s", tc.id),
+				nil,
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, tc.code, w.Code, tc.key)
 		}
 	})
 }

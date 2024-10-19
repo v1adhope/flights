@@ -6,7 +6,7 @@ env:
   POSTGRES_PASSWORD: secret
   POSTGRES_USER: rat
   POSTGRES_DB: flights
-  POSTGRES_MIGRATE_NUMBER: 2
+  POSTGRES_MIGRATE_NUMBER: 3
 
 tasks:
   docs-gen:
