@@ -49,7 +49,7 @@ func errorsHandler(log Logger) gin.HandlerFunc {
 					log.Debug(ginErr, "%s", "StatusConflict")
 					abortWithErrorMsg(c, http.StatusConflict, err.Error())
 					return
-				case errors.Is(err, entities.ErrorsThereArePassengersOnRaice):
+				case errors.Is(err, entities.ErrorsThereArePassengersOnTheFlight):
 					log.Debug(ginErr, "%s", "StatusForbidden")
 					abortWithErrorMsg(c, http.StatusForbidden, err.Error())
 					return

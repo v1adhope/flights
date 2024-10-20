@@ -87,7 +87,7 @@ func (r *Repository) DeleteTicket(ctx context.Context, id entities.Id) error {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
 			if pgErr.ConstraintName == "fk_ticket_passenger_tickets_ticket_id" {
-				return fmt.Errorf("repository: document: BoundToTicket: Exec: %w", entities.ErrorsThereArePassengersOnRaice)
+				return fmt.Errorf("repository: document: BoundToTicket: Exec: %w", entities.ErrorsThereArePassengersOnTheFlight)
 			}
 		}
 
