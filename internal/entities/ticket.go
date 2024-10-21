@@ -1,7 +1,7 @@
 package entities
 
 type Ticket struct {
-	Id        string `json:"id" example:"uuid"`
+	Id        string `json:"id,omitempty" example:"uuid"`
 	Provider  string `json:"provider" example:"Emirates"`
 	FlyFrom   string `json:"flyFrom" example:"Moscow"`
 	FlyTo     string `json:"flyTo" example:"Hanoi"`

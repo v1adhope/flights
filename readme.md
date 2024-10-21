@@ -28,7 +28,9 @@ Password: admin
 │       ├── 000003_init.down.sql
 │       ├── 000003_init.up.sql
 │       ├── 000004_init.down.sql
-│       └── 000004_init.up.sql
+│       ├── 000004_init.up.sql
+│       ├── 000005_init.down.sql
+│       └── 000005_init.up.sql
 ├── dockerfile
 ├── docs
 │   ├── docs.go

@@ -150,10 +150,8 @@ func (r *Repository) GetTickets(ctx context.Context) ([]entities.Ticket, error) 
 	return tickets, nil
 }
 
-// TODO: exclude ticket_id
 func (r *Repository) GetWholeInfoAboutTicket(ctx context.Context, id entities.Id) (entities.TicketWholeInfo, error) {
 	sql, args, err := r.Builder.Select(
-		"tickets.ticket_id",
 		"tickets.provider",
 		"tickets.fly_from",
 		"tickets.fly_to",
@@ -193,7 +191,6 @@ func (r *Repository) GetWholeInfoAboutTicket(ctx context.Context, id entities.Id
 	tag, err := pgx.ForEachRow(
 		rows,
 		[]any{
-			&ticketDto.Id,
 			&ticketDto.Provider,
 			&ticketDto.FlyFrom,
 			&ticketDto.FlyTo,

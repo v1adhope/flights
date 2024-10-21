@@ -92,13 +92,11 @@ func (r *Repository) DeleteDocument(ctx context.Context, id entities.Id) error {
 	return nil
 }
 
-// TODO: exclude PassengerId from set
 func (r *Repository) GetDocumentsByPassengerId(ctx context.Context, id entities.Id) ([]entities.Document, error) {
 	sql, args, err := r.Builder.Select(
 		"document_id",
 		"type",
 		"number",
-		"passenger_id",
 	).
 		From("documents").
 		Where(squirrel.Eq{
@@ -123,7 +121,6 @@ func (r *Repository) GetDocumentsByPassengerId(ctx context.Context, id entities.
 			&document.Id,
 			&document.Type,
 			&document.Number,
-			&document.PassengerId,
 		},
 		func() error {
 			documents = append(documents, document)

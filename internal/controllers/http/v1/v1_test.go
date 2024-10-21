@@ -266,7 +266,7 @@ func (s *Suite) Test1bCreateTicketNegative() {
 	})
 }
 
-// TODO: error
+// TODO: error: bug???: works with swagger
 // func (s *Suite) Test1cReplaceTicketPositive() {
 // 	t := s.T()
 //
@@ -277,7 +277,7 @@ func (s *Suite) Test1bCreateTicketNegative() {
 // 		{
 // 			key: "1",
 // 			body: ticketCreateReq{
-// 				id:       s.utils.GetTicketByOffset(s.ctx, 0),
+// 				id:       s.utils.GetTicketByOffset(s.ctx, 1),
 // 				Provider: "China Airlines",
 // 				FlyFrom:  "Beijing",
 // 				FlyTo:    "Moscow",
@@ -898,10 +898,9 @@ func (s *Suite) Test1mDeleteDocument() {
 }
 
 type document struct {
-	Id          string `json:"id"`
-	Type        string `json:"type"`
-	Number      string `json:"number"`
-	PassengerId string `json:"passengerId"`
+	Id     string `json:"id"`
+	Type   string `json:"type"`
+	Number string `json:"number"`
 }
 
 func (s *Suite) Test1nGetDocumentsByPassengerId() {
@@ -917,16 +916,14 @@ func (s *Suite) Test1nGetDocumentsByPassengerId() {
 			id:  s.utils.GetPassengerByOffset(s.ctx, 0),
 			expected: []document{
 				{
-					Id:          s.utils.GetDocumentByOffset(s.ctx, 0),
-					Type:        "Id card",
-					Number:      "5555666777",
-					PassengerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+					Id:     s.utils.GetDocumentByOffset(s.ctx, 0),
+					Type:   "Id card",
+					Number: "5555666777",
 				},
 				{
-					Id:          s.utils.GetDocumentByOffset(s.ctx, 1),
-					Type:        "International passport",
-					Number:      "5555666888",
-					PassengerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+					Id:     s.utils.GetDocumentByOffset(s.ctx, 1),
+					Type:   "International passport",
+					Number: "5555666888",
 				},
 			},
 		},
@@ -1179,7 +1176,6 @@ func (s *Suite) Test1sGetPassengersByTicketIdPositive() {
 // INFO: passanger,  ticket, document
 
 type ticketWholeInfo struct {
-	Id         string                     `json:"id"`
 	Provider   string                     `json:"provider"`
 	FlyFrom    string                     `json:"flyFrom"`
 	FlyTo      string                     `json:"flyTo"`
@@ -1218,7 +1214,6 @@ func (s *Suite) Test1tGetTicketWholeInfo() {
 			key: "1",
 			id:  s.utils.GetTicketByOffset(s.ctx, 0),
 			expected: ticketWholeInfo{
-				Id:       s.utils.GetTicketByOffset(s.ctx, 0),
 				Provider: "Emirates",
 				FlyFrom:  "Moscow",
 				FlyTo:    "Hanoi",
