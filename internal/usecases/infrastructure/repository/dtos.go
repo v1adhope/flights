@@ -65,3 +65,23 @@ func (d *documentTicketWholeInfoDto) toEntity() entities.DocumentTicketWholeInfo
 		Number: *d.Number,
 	}
 }
+
+type reportRowByPassengerForPeriodDto struct {
+	DateOfIssue     pgtype.Timestamptz `json:"dateOfIssue"`
+	FlyAt           pgtype.Timestamptz `json:"flyAt"`
+	TicketId        string             `json:"ticketID"`
+	FlyFrom         string             `json:"flyFrom"`
+	FlyTo           string             `json:"flyTo"`
+	ServiceProvided bool               `json:"serviceProvided"`
+}
+
+func (d *reportRowByPassengerForPeriodDto) toEntity() entities.ReportRowByPassengerForPeriod {
+	return entities.ReportRowByPassengerForPeriod{
+		DateOfIssue:     d.DateOfIssue.Time.Format(time.RFC3339),
+		FlyAt:           d.FlyAt.Time.Format(time.RFC3339),
+		TicketId:        d.TicketId,
+		FlyFrom:         d.FlyFrom,
+		FlyTo:           d.FlyTo,
+		ServiceProvided: d.ServiceProvided,
+	}
+}

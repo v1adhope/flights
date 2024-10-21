@@ -32,6 +32,10 @@ type DocumentUsecaser interface {
 	GetDocumentsByPassengerId(ctx context.Context, id entities.Id) ([]entities.Document, error)
 }
 
+type ReportUsecaser interface {
+	GetRowsByPassengerIdForPeriod(ctx context.Context, id entities.Id, filter entities.PeriodFilter) ([]entities.ReportRowByPassengerForPeriod, error)
+}
+
 type Logger interface {
 	Debug(err error, format string, msg ...any)
 	Error(err error, format string, msg ...any)

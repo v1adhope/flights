@@ -10,6 +10,7 @@ type Reposer interface {
 	Ticket
 	Passenger
 	Document
+	Report
 }
 
 type (
@@ -37,5 +38,9 @@ type (
 		ReplaceDocument(ctx context.Context, document entities.Document) error
 		DeleteDocument(ctx context.Context, id entities.Id) error
 		GetDocumentsByPassengerId(ctx context.Context, id entities.Id) ([]entities.Document, error)
+	}
+
+	Report interface {
+		GetRowsByPassengerIdForPeriod(ctx context.Context, id entities.Id, filter entities.PeriodFilter) ([]entities.ReportRowByPassengerForPeriod, error)
 	}
 )

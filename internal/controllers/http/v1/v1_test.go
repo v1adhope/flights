@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -101,6 +102,11 @@ type id struct {
 	Id string `json:"id"`
 }
 
+type periodFilter struct {
+	From string
+	To   string
+}
+
 func convertTime(target string) (string, error) {
 	timeT, err := time.Parse(time.RFC3339, target)
 	if err != nil {
@@ -134,8 +140,8 @@ func (s *Suite) Test1aCreateTicketPositive() {
 				Provider: "Emirates",
 				FlyFrom:  "Moscow",
 				FlyTo:    "Hanoi",
-				FlyAt:    "2022-01-02T15:04:05+03:00",
-				ArriveAt: "2022-01-03T15:04:05+07:00",
+				FlyAt:    "3022-01-02T15:04:05+03:00",
+				ArriveAt: "3022-01-03T18:04:40+07:00",
 			},
 		},
 		{
@@ -144,8 +150,8 @@ func (s *Suite) Test1aCreateTicketPositive() {
 				Provider: "Emirates",
 				FlyFrom:  "Moscow",
 				FlyTo:    "Hanoi",
-				FlyAt:    "2022-01-02T15:04:05+03:00",
-				ArriveAt: "2022-01-03T15:04:05+07:00",
+				FlyAt:    "3022-01-02T15:04:05+03:00",
+				ArriveAt: "3022-01-03T18:04:40+07:00",
 			},
 		},
 		{
@@ -154,8 +160,8 @@ func (s *Suite) Test1aCreateTicketPositive() {
 				Provider: "China Airlines",
 				FlyFrom:  "Beijing",
 				FlyTo:    "Moscow",
-				FlyAt:    "2023-01-02T15:04:05+08:00",
-				ArriveAt: "2023-01-03T15:04:05+03:00",
+				FlyAt:    "3023-04-16T21:00:00+08:00",
+				ArriveAt: "3023-04-17T10:00:00+03:00",
 			},
 		},
 	}
@@ -193,8 +199,8 @@ func (s *Suite) Test1bCreateTicketNegative() {
 			body: ticketCreateReq{
 				Provider: "Emirates",
 				FlyTo:    "Hanoi",
-				FlyAt:    "2022-01-02T15:04:05+03:00",
-				ArriveAt: "2022-01-03T15:04:05+07:00",
+				FlyAt:    "3022-01-02T15:04:05+03:00",
+				ArriveAt: "3022-01-03T18:04:40+07:00",
 			},
 		},
 		// TODO: fix or remove
@@ -204,8 +210,8 @@ func (s *Suite) Test1bCreateTicketNegative() {
 		// 		Provider: "China Airlines",
 		// 		FlyFrom:  "Beijing",
 		// 		FlyTo:    "Moscow",
-		// 		FlyAt:    "2023-01-03T15:04:05+03:00",
-		// 		ArriveAt: "2023-01-02T15:04:05+08:00",
+		// 		FlyAt:    "3023-04-17T10:00:00+03:00",
+		// 		ArriveAt: "3023-04-16T21:00:00+08:00",
 		// 	},
 		// },
 		{
@@ -214,8 +220,8 @@ func (s *Suite) Test1bCreateTicketNegative() {
 				Provider: "China Airlines",
 				FlyFrom:  strings.Repeat("A", 256),
 				FlyTo:    "Moscow",
-				FlyAt:    "2023-01-03T15:04:05+03:00",
-				ArriveAt: "2023-01-02T15:04:05+08:00",
+				FlyAt:    "3023-04-17T10:00:00+03:00",
+				ArriveAt: "3023-04-16T21:00:00+08:00",
 			},
 		},
 	}
@@ -256,8 +262,8 @@ func (s *Suite) Test1bCreateTicketNegative() {
 // 				Provider: "China Airlines",
 // 				FlyFrom:  "Beijing",
 // 				FlyTo:    "Moscow",
-// 				FlyAt:    "2023-01-02T15:04:05+08:00",
-// 				ArriveAt: "2023-01-03T15:04:05+03:00",
+// 				FlyAt:    "3023-04-16T21:00:00+08:00",
+// 				ArriveAt: "3023-04-17T10:00:00+03:00",
 // 			},
 // 		},
 // 	}
@@ -1232,6 +1238,130 @@ func (s *Suite) Test1tGetTicketWholeInfo() {
 			assert.NoError(t, err, tc.key)
 			_, err = convertTime(timeFields.CreatedAt)
 			assert.NoError(t, err, tc.key)
+		}
+	})
+}
+
+// INFO: passanger,  ticket
+
+type reportRowByPassengerForPeriod struct {
+	TicketId        string
+	FlyFrom         string
+	FlyTo           string
+	ServiceProvided bool
+}
+
+type timeFieldsReportRowByPassengerForPeriod struct {
+	DateOfIssue string
+	FlyAt       string
+}
+
+func (s *Suite) Test1uGetReportByPassengerIdForPeriodPositive() {
+	t := s.T()
+
+	tcs := []struct {
+		key      string
+		id       string
+		query    periodFilter
+		expected []reportRowByPassengerForPeriod
+	}{
+		{
+			key: "1",
+			id:  s.utils.GetPassengerByOffset(s.ctx, 0),
+			query: periodFilter{
+				From: "2023-04-15T21:00:00+08:00",
+				To:   "4023-04-18T21:00:00+03:00",
+			},
+			expected: []reportRowByPassengerForPeriod{
+				{
+					TicketId:        s.utils.GetTicketByOffset(s.ctx, 0),
+					FlyFrom:         "Moscow",
+					FlyTo:           "Hanoi",
+					ServiceProvided: true,
+				},
+			},
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			v := url.Values{}
+			v.Add("from", tc.query.From)
+			v.Add("to", tc.query.To)
+			query := v.Encode()
+
+			req, err := http.NewRequest(
+				http.MethodGet,
+				fmt.Sprintf("/v1/reports/by-passenger-id-for-period/%s?%s", tc.id, query),
+				nil,
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusOK, w.Code, tc.key)
+
+			report := []reportRowByPassengerForPeriod{}
+			err = json.NewDecoder(w.Result().Body).Decode(&report)
+			assert.NoError(t, err, tc.key)
+
+			assert.Equal(t, tc.expected, report, tc.key)
+
+			timeFields := []timeFieldsReportRowByPassengerForPeriod{}
+			err = json.NewDecoder(w.Body).Decode(&timeFields)
+			assert.NoError(t, err, tc.key)
+
+			for _, tf := range timeFields {
+				_, err = convertTime(tf.FlyAt)
+				assert.NoError(t, err, tc.key)
+				_, err = convertTime(tf.DateOfIssue)
+				assert.NoError(t, err, tc.key)
+			}
+		}
+	})
+}
+
+func (s *Suite) Test1vGetReportByPassengerIdForPeriodNegative() {
+	t := s.T()
+
+	tcs := []struct {
+		key   string
+		id    string
+		query periodFilter
+		code  int
+	}{
+		{
+			key: "1",
+			id:  s.utils.GetPassengerByOffset(s.ctx, 1),
+			query: periodFilter{
+				From: "2023-04-15T21:00:00+08:00",
+				To:   "4023-04-18T21:00:00+03:00",
+			},
+			code: http.StatusNoContent,
+		},
+	}
+
+	t.Run("", func(t *testing.T) {
+		for _, tc := range tcs {
+			v := url.Values{}
+			v.Add("from", tc.query.From)
+			v.Add("to", tc.query.To)
+			query := v.Encode()
+
+			req, err := http.NewRequest(
+				http.MethodGet,
+				fmt.Sprintf("/v1/reports/by-passenger-id-for-period/%s?%s", tc.id, query),
+				nil,
+			)
+			assert.NoError(t, err, tc.key)
+
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			assert.Equal(t, tc.code, w.Code, tc.key)
 		}
 	})
 }

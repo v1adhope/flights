@@ -27,8 +27,8 @@ type ticketCreateReq struct {
 	Provider string `json:"provider" example:"Emirates" binding:"required,max=255"`
 	FlyFrom  string `json:"flyFrom" example:"Moscow" binding:"required,max=255"`
 	FlyTo    string `json:"flyTo" example:"Hanoi" binding:"required,max=255"`
-	FlyAt    string `json:"flyAt" example:"2022-01-02T15:04:05+03:00" binding:"required,rfc3339Time"`
-	ArriveAt string `json:"arriveAt" example:"2022-01-03T15:04:05+07:00" binding:"required,rfc3339Time"`
+	FlyAt    string `json:"flyAt" example:"3022-01-02T15:04:05+03:00" binding:"required,rfc3339Time"`
+	ArriveAt string `json:"arriveAt" example:"3022-01-03T18:04:40+07:00" binding:"required,rfc3339Time"`
 }
 
 // @tags Tickets
@@ -154,6 +154,7 @@ func (g *ticketGroup) all(c *gin.Context) {
 // @param id path string true "Ticket id (uuid)"
 // @response 200 {array} entities.TicketWholeInfo
 // @response 204
+// @response 422
 // @response 500
 // @router /tickets/whole-info/{id} [GET]
 func (g *ticketGroup) wholeInfo(c *gin.Context) {
