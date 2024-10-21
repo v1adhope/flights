@@ -29,9 +29,9 @@ func registgerPassengerGroup(group *passengerGroup) {
 }
 
 type passengerCreateReq struct {
-	FirstName  string `json:"firstName" example:"Riley" binding:"required,max=255"`
-	LastName   string `json:"lastName" example:"Scott" binding:"required,max=255"`
-	MiddleName string `json:"middleName" example:"Reed" binding:"required,max=255"`
+	FirstName  string `json:"firstName" example:"Riley" binding:"required,max=255,names"`
+	LastName   string `json:"lastName" example:"Scott" binding:"required,max=255,names"`
+	MiddleName string `json:"middleName" example:"Reed" binding:"required,max=255,names"`
 }
 
 // @tags Passengers

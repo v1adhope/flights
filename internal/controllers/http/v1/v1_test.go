@@ -203,17 +203,16 @@ func (s *Suite) Test1bCreateTicketNegative() {
 				ArriveAt: "3022-01-03T18:04:40+07:00",
 			},
 		},
-		// TODO: fix or remove
-		// {
-		// 	key: "Mixed up fly dates",
-		// 	body: ticketCreateReq{
-		// 		Provider: "China Airlines",
-		// 		FlyFrom:  "Beijing",
-		// 		FlyTo:    "Moscow",
-		// 		FlyAt:    "3023-04-17T10:00:00+03:00",
-		// 		ArriveAt: "3023-04-16T21:00:00+08:00",
-		// 	},
-		// },
+		{
+			key: "Mixed up fly dates",
+			body: ticketCreateReq{
+				Provider: "China Airlines",
+				FlyFrom:  "Beijing",
+				FlyTo:    "Moscow",
+				FlyAt:    "3023-04-17T10:00:00+03:00",
+				ArriveAt: "3023-04-16T21:00:00+08:00",
+			},
+		},
 		{
 			key: "Spot overflow",
 			body: ticketCreateReq{
@@ -221,6 +220,26 @@ func (s *Suite) Test1bCreateTicketNegative() {
 				FlyFrom:  strings.Repeat("A", 256),
 				FlyTo:    "Moscow",
 				FlyAt:    "3023-04-17T10:00:00+03:00",
+				ArriveAt: "3023-04-16T21:00:00+08:00",
+			},
+		},
+		{
+			key: "Flight can't be before order",
+			body: ticketCreateReq{
+				Provider: "China Airlines",
+				FlyFrom:  "Beijing",
+				FlyTo:    "Moscow",
+				FlyAt:    "2023-04-17T10:00:00+03:00",
+				ArriveAt: "3023-04-16T21:00:00+08:00",
+			},
+		},
+		{
+			key: "Incorrect spot",
+			body: ticketCreateReq{
+				Provider: "China Airlines",
+				FlyFrom:  "Beijing",
+				FlyTo:    "Mosc0w",
+				FlyAt:    "2023-04-17T10:00:00+03:00",
 				ArriveAt: "3023-04-16T21:00:00+08:00",
 			},
 		},
@@ -481,6 +500,7 @@ func (s *Suite) Test1fCreatePassengerNegative() {
 	tcs := []struct {
 		key  string
 		body passengerCreateReq
+		code int
 	}{
 		{
 			key: "Name overflow",
@@ -489,6 +509,16 @@ func (s *Suite) Test1fCreatePassengerNegative() {
 				LastName:   "Scott",
 				MiddleName: "Reed",
 			},
+			code: http.StatusUnprocessableEntity,
+		},
+		{
+			key: "Unprocessed name",
+			body: passengerCreateReq{
+				FirstName:  "Rilley",
+				LastName:   "Sc0tt",
+				MiddleName: "Reed",
+			},
+			code: http.StatusUnprocessableEntity,
 		},
 	}
 
@@ -508,7 +538,7 @@ func (s *Suite) Test1fCreatePassengerNegative() {
 
 			s.router.ServeHTTP(w, req)
 
-			assert.Equal(t, http.StatusUnprocessableEntity, w.Code, tc.key)
+			assert.Equal(t, tc.code, w.Code, tc.key)
 		}
 	})
 }
@@ -748,6 +778,15 @@ func (s *Suite) Test1kCreateDocumentNegative() {
 			body: documentCreateReq{
 				Type:        "International passport",
 				Number:      strings.Repeat("1", 256),
+				PassengerId: s.utils.GetPassengerByOffset(s.ctx, 0),
+			},
+			code: http.StatusUnprocessableEntity,
+		},
+		{
+			key: "Can't consist not numbers",
+			body: documentCreateReq{
+				Type:        "International passport",
+				Number:      "onetwofree",
 				PassengerId: s.utils.GetPassengerByOffset(s.ctx, 0),
 			},
 			code: http.StatusUnprocessableEntity,
@@ -1333,13 +1372,22 @@ func (s *Suite) Test1vGetReportByPassengerIdForPeriodNegative() {
 		code  int
 	}{
 		{
-			key: "1",
+			key: "No content",
 			id:  s.utils.GetPassengerByOffset(s.ctx, 1),
 			query: periodFilter{
 				From: "2023-04-15T21:00:00+08:00",
 				To:   "4023-04-18T21:00:00+03:00",
 			},
 			code: http.StatusNoContent,
+		},
+		{
+			key: "Mixed up dates",
+			id:  s.utils.GetPassengerByOffset(s.ctx, 1),
+			query: periodFilter{
+				From: "4023-04-18T21:00:00+03:00",
+				To:   "2023-04-15T21:00:00+08:00",
+			},
+			code: http.StatusUnprocessableEntity,
 		},
 	}
 

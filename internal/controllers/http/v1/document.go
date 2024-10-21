@@ -24,7 +24,7 @@ func registerDocumentGroup(group *documentGroup) {
 
 type documentCreateReq struct {
 	Type        string `json:"type" example:"Passport" binding:"required,oneof='Passport' 'Id card' 'International passport'"`
-	Number      string `json:"number" example:"5555444444" binding:"required,max=255"`
+	Number      string `json:"number" example:"5555444444" binding:"required,max=255,number"`
 	PassengerId string `json:"passengerId" example:"uuid" binding:"required,uuid"`
 }
 

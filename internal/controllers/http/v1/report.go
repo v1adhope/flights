@@ -20,8 +20,8 @@ func registerReportGroup(group *reportGroup) {
 }
 
 type reportByPassengerIdForPeriodQuery struct {
-	From string `form:"from" binding:"required,rfc3339Time"`
-	To   string `form:"to" binding:"required,rfc3339Time"`
+	From string `form:"from" binding:"required"`
+	To   string `form:"to" binding:"required"`
 }
 
 // @tags Reports

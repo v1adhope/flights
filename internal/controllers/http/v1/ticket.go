@@ -25,10 +25,10 @@ func registerTicketGroup(group *ticketGroup) {
 
 type ticketCreateReq struct {
 	Provider string `json:"provider" example:"Emirates" binding:"required,max=255"`
-	FlyFrom  string `json:"flyFrom" example:"Moscow" binding:"required,max=255"`
-	FlyTo    string `json:"flyTo" example:"Hanoi" binding:"required,max=255"`
-	FlyAt    string `json:"flyAt" example:"3022-01-02T15:04:05+03:00" binding:"required,rfc3339Time"`
-	ArriveAt string `json:"arriveAt" example:"3022-01-03T18:04:40+07:00" binding:"required,rfc3339Time"`
+	FlyFrom  string `json:"flyFrom" example:"Moscow" binding:"required,max=255,names"`
+	FlyTo    string `json:"flyTo" example:"Hanoi" binding:"required,max=255,names"`
+	FlyAt    string `json:"flyAt" example:"3022-01-02T15:04:05+03:00" binding:"required"`
+	ArriveAt string `json:"arriveAt" example:"3022-01-03T18:04:40+07:00" binding:"required"`
 }
 
 // @tags Tickets

@@ -22,7 +22,9 @@ func Register(r *Router) {
 	docs.SwaggerInfo.Title = "Flights API"
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		v.RegisterValidation("rfc3339Time", rfc3339Time)
+		v.RegisterValidation("names", names)
+		v.RegisterStructValidation(ticketCreateReqStructLevelValidation, ticketCreateReq{})
+		v.RegisterStructValidation(reportByPassengerIdForPeriodQueryStructLevelValidation, reportByPassengerIdForPeriodQuery{})
 	}
 
 	rg := r.Handler.Group("/v1")
